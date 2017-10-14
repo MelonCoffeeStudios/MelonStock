@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./part/head %>
+</head>
+<body class="container">
+
+    <header>
+        <% include ./part/header %>
+    </header>
+
+    <main>
+        <div class="jumbotron">
+            <h1>User Management</h1>
+            <p>Welcome <%= user.info.firstName %>!<br/>
+            You are authorised to manage
+                <% if(user.auth.modifyAllUsers){ %>
+                    all users!
+                <% } else if(user.auth.modifyStoreUsers){ %>
+                    your stores users!
+                <% }%>
+            </p>
+        </div>
+        <div class="panel-group" id="settingsPane">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#settingsPane" href="#userInformation">
+                            User Information</a>
+                    </h4>
+                </div>
+                <div id="userInformation" class="panel-collapse collapse in">
+                    <div class="panel-body">
+                        <table class="table table-hover">
+                            <tbody>
+                            <tr>
+                                <td>First Name</td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" name="firstName" class="form-control profileInput" placeholder="<%= userEdit.info.firstName %>">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default btn-success profileSave" fieldType='firstName' type="button">Save!</button>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Last Name</td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" name="lastName" class="form-control profileInput" placeholder="<%= userEdit.info.lastName %>">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default btn-success profileSave" fieldType="lastName" type="button">Save!</button>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>User Level</td>
+                                <td><%= userEdit.userTypePretty %>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <% include ./part/footer %>
+    </footer>
+
+</body>
+</html>

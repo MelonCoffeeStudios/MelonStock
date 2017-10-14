@@ -1,0 +1,17 @@
+.profileInput {
+    /*width: 200px; height: 100px;*/
+    background-size: 200% 100%;
+    background-image: linear-gradient(to right, white 50%, rgb(92, 184, 92) 50%);
+    
+}
+
+.slideSuccess {
+	transition: background-position .5s;
+    background-position: -100% 0;
+}
+
+.slideFailure {
+	background-image: linear-gradient(to right, white 50%, rgb(217, 83, 79) 50%);
+	transition: background-position .5s;
+    background-position: -100% 0;	
+}

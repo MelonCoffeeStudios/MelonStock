@@ -1,0 +1,35 @@
+{
+  "name": "melonstock",
+  "version": "1.0.0",
+  "description": "Stock Management System for my third year project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MelonCoffeeStudios/MelonStock.git"
+  },
+  "author": "Aaron Griffin (MelonCoffeeStudios)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MelonCoffeeStudios/MelonStock/issues"
+  },
+  "homepage": "https://github.com/MelonCoffeeStudios/MelonStock#readme",
+  "dependencies": {
+    "bcrypt-nodejs": "latest",
+    "body-parser": "~1.0.0",
+    "connect-flash": "~0.1.1",
+    "cookie-parser": "~1.0.0",
+    "ejs": "^2.5.7",
+    "express": "^4.15.4",
+    "express-fileupload": "^0.2.0",
+    "express-session": "~1.0.0",
+    "method-override": "~1.0.0",
+    "mongoose": "^4.11.11",
+    "morgan": "~1.0.0",
+    "passport": "~0.1.17",
+    "passport-local": "~0.1.6",
+    "pdfreader": "^0.2.4"
+  }
+}

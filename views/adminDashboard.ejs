@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./part/head %>
+</head>
+<body class="container">
+
+    <header>
+        <% include ./part/header %>
+    </header>
+
+    <main>
+        <div class="jumbotron">
+            <h1>Dashboard</h1>
+            <p>Welcome <%= user.info.firstName %></p>
+        </div>
+        <div class="panel-group" id="settingsPane">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h2 class="panel-title">PDF biz</h2>
+                </div>
+                <div class="panel-body">
+                    <h4>Manage Users</h4>
+                    <a href="/userMGMT"><button class="btn btn-primary">Manage Users</button> </a>
+                </div>
+                <div class="panel-body">
+                    <h4>Upload PDF for data extraction</h4>
+                    <form ref='pdfUpload' 
+                      id='pdfUpload' 
+                      action='/pdfExtract' 
+                      method='post' 
+                      encType="multipart/form-data">
+                        <input type="file" name="fileData" />
+                        <input type='submit' value='Upload!' />
+                    </form>
+
+                    <div>
+                        <span>
+                        <%= text %>
+                            <table>
+                            <% text.forEach(function(rows){ %>
+                                <tr>
+                                    <% rows.forEach(function(dat){ %>
+                                        <td><%= dat %> </td>
+                                    <% }) %>
+                                </tr>
+                            <% }) %>
+                            </table>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <% include ./part/footer %>
+    </footer>
+
+</body>
+</html>
