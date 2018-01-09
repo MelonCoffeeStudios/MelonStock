@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./part/head %>
+</head>
+<body class="container">
+
+    <header>
+        <% include ./part/header %>
+        <script type="text/javascript" src="/static/js/editUser.js"></script>
+    </header>
+
+    <main>
+        <div class="jumbotron">
+            <h1>Add User</h1>
+        </div>
+        <div class="panel-group" id="settingsPane">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#settingsPane" href="#userInformation">
+                            User Information</a>
+                    </h4>
+                </div>
+                <div id="userInformation" class="panel-collapse collapse in">
+                    <div class="panel-body">
+                        <form action="/action_page.php">
+                            <% if(level == 0) { %>
+                                <label for="store">Store Number</label>
+                                <input type="number" name="store" id="store" class="form-control">
+                            <% }else{ %>
+                                <label for="store">Store Number</label>
+                                <input type="number" name="store" id="store" value="<%= user.store %>" class="form-control" disabled>
+                            <% } %>
+                            <div class="form-group">
+                                <label for="firstName">First Name:</label>
+                                <input type="text" class="form-control" id="firstName" placeholder="Enter first name" name="firstName">
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name:</label>
+                                <input type="text" class="form-control" id="lastName" placeholder="Enter last name" name="lastName">
+                            </div>
+                            <div class="form-group">
+                                <label for="dob">Last Name:</label>
+                                <input type="date" class="form-control" id="dob" name="dob">
+                            </div>
+                            <div class="form-group">
+                                <label>Previous Stores:</label><br>
+                                <button class="btn" style="margin-bottom: 5px;" id="addPrevButton">Add Store</button>
+                                <div class="well" id="previousStoresWell">
+                                    No stores defined...
+                                </div>
+                            </div>
+
+                            <div class="well popup addPrevStore">
+                                <header>
+                                    <span class="glyphicon glyphicon-remove popup-close" title="Close Popup"></span>
+                                </header>
+                                <div class="popup popup-main">
+                                    <div class="form-group">
+                                        <label for="retailSelect">:</label>
+                                        <select class="form-control" id="retailSelect">
+                                            <option>1</option>
+                                            <option>2</option>
+                                            <option>3</option>
+                                            <option>4</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="store">Store Number:</label>
+                                        <input type="number" class="form-control" id="store" placeholder="Enter store number" name="store">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateFrom">Date from:</label>
+                                        <input type="date" class="form-control" id="dateFrom" placeholder="Enter date from" name="dateFrom">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="dateTo">Last Name:</label>
+                                        <input type="date" class="form-control" id="dateTo" name="dateTo">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="role">Select list:</label>
+                                        <select class="form-control" id="role">
+                                            <option value="till">Till</option>
+                                            <option value="till+">Till+</option>
+                                            <option value="super">Supervisor</option>
+                                            <option value="mngr">Manager</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            * 'root' (1337)  : Root Access to everything
+                            * 'till'  (1)    : Access to POS only
+                            * 'till+' (2)    : Access to POS and some Back Office tools
+                            * 'super' (3)    : Supervisor, till+ and most Back Office
+                            * 'mngr'  (4)    : till+ and all Back Office
+                            * 'range' (5)    : Ranging, add stock to system
+                            *                  Create range plans for stores
+                            *                  Add new Order Lines
+                            * 'ho'    (6)    : Head Office, access to everything (except server management)
+
+                            <div class="checkbox">
+                                <label><input type="checkbox" name="remember"> Remember me</label>
+                            </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <% include ./part/footer %>
+    </footer>
+
+</body>
+</html>

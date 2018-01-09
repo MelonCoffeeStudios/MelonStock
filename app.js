@@ -47,11 +47,18 @@
 
  // App Routes
 	app.get('/', isLoggedIn, function(req, res) {
-		res.render('index', 
-		{
+		res.render('index', {
 			user: req.user
 		})
 	});
+
+	app.get('/pos', isLoggedIn, function (req, res) {
+
+		res.render('pos', {
+			user:	req.user
+		});
+
+    });
 
 	// PROFILE
 	app.get('/profile', isLoggedIn, function(req, res) {
@@ -100,7 +107,8 @@
 			return res.status(400).send('No files were uploaded.');
 		 
 		// The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-		let file = req.files.fileData;
+		// noinspection JSAnnotator
+        let file = req.files.fileData;
 
 		file.mv('./pdfFiles/temp.pdf', function(err) {
 		    if (err)
@@ -146,6 +154,65 @@
 
 	});
 
+	app.get('/editUser/:id', isLoggedIn, function (req, res) {
+    if(req.user.auth.modifyAllUsers){
+        User.findById(req.params.id, function (err, u) {
+            res.render('editUser.ejs', {
+                user: req.user,
+                userEdit: u
+            })
+        })
+
+    } else if(req.user.auth.modifyStoreUsers) {
+        // TODO:Render store user management
+
+    }else{
+        // Unauth, send error!
+        // TODO: Create type based error page
+        res.status(500).send();
+    }
+});
+
+	app.get('/addUser', isLoggedIn, function (req, res) {
+		auth('user', req.user, function (level) {
+            res.render('addUser', {
+            	user	: req.user,
+				level	: level
+			})
+        })
+    })
+
+
+	app.get('/error/:code', function (req, res) {
+		switch(req.params.code){
+			case '401':
+				res.render('error', {
+					code: 401,
+					text: 'You are unauthorised to access this area! Please contact your system administrator.'
+				});
+				break;
+		}
+    })
+
+
+	app.get('/userManagement', isLoggedIn, function (req, res) {
+		if(req.user.auth.modifyAllUsers){
+			User.find({}, function (err, users) {
+				res.render('userManagement.ejs', {
+					user: req.user,
+					userList: users
+				})
+			})
+
+		} else if(req.user.auth.modifyStoreUsers) {
+			// TODO:Render store user management
+
+		}else{
+			// Unauth, send error!
+			// TODO: Create type based error page
+			res.status(500).send();
+		}
+	});
 
 
 
@@ -160,9 +227,9 @@
 
 
     // =====================================
-    // LOGIN ===============================
+    // ============== MISC =================
     // =====================================
-    // show the login form
+
     app.get('/login', function(req, res) {
 
         // render the page and pass in any flash data if it exists
@@ -174,76 +241,38 @@
         failureFlash : true // allow flash messages
     }));
 
-    // =====================================
-    // SIGNUP ==============================
-    // =====================================
-    // show the signup form
     app.get('/signup', function(req, res) {
 
         // render the page and pass in any flash data if it exists
         res.render('rootSignup.ejs', { message: req.flash('signupMessage') });
-    }); 
-    // process the signup form
+    });
     app.post('/signup', passport.authenticate('local-signup', {
         successRedirect : '/', // redirect to the secure profile section
         failureRedirect : '/signup', // redirect back to the signup page if there is an error
         failureFlash : true // allow flash messages
     }));
 
-    // =====================================
-    // LOGOUT ==============================
-    // =====================================
     app.get('/logout', function(req, res) {
         req.logout();
         res.redirect('/');
     });
 
-    app.get('/userMGMT', isLoggedIn, function (req, res) {
-		if(req.user.auth.modifyAllUsers){
-            User.find({}, function (err, users) {
-                res.render('userManagement.ejs', {
-                    user: req.user,
-                    userList: users
-                })
-            })
-
-		} else if(req.user.auth.modifyStoreUsers) {
-			// TODO:Render store user management
-
-        }else{
-			// Unauth, send error!
-			// TODO: Create type based error page
-			res.status(500).send();
-		}
-    });
-
-    app.get('/editUser/:id', isLoggedIn, function (req, res) {
-        if(req.user.auth.modifyAllUsers){
-            User.findById(req.params.id, function (err, u) {
-                res.render('editUser.ejs', {
-                    user: req.user,
-                    userEdit: u
-                })
-            })
-
-        } else if(req.user.auth.modifyStoreUsers) {
-            // TODO:Render store user management
-
-        }else{
-            // Unauth, send error!
-            // TODO: Create type based error page
-            res.status(500).send();
-        }
-    })
+	app.get('*', function(req, res){ // 404
+        res.render('error', {
+            code: 404,
+            text: 'The page you are trying to reach does not exist, please contact your system administrator!'
+        });
+	});
 
 
 
 
 
 
-	// Route API
 
-	// route middleware to make sure a user is logged in
+// =====================================
+// ============ FUNCTIONS ==============
+// =====================================
 	function isLoggedIn(req, res, next) {
 
 	    // if user is authenticated in the session, carry on 
@@ -251,17 +280,31 @@
 	        return next();
 
 	    // if they aren't redirect them to the home page
-	    if(req.method == "GET"){
+	    if(req.method === "GET"){
 	    	res.redirect('/login');
-		}else if(req.method == 'POST'){
+		}else if(req.method === 'POST'){
 			res.status(403).send("User is not authenticated")
 		}
 	}
+
+	function auth(f, user, callback) {
+		switch(f){
+			case 'user':
+                if(user.auth.modifyStoreUsers){
+                    callback(1);
+                } else if(user.auth.modifyAllUsers){
+                	callback(0);
+				} else {
+                    res.redirect('/error/401');
+                }break;
+		}
+
+    }
 
 
 
 // Run App
 
 	app.listen(port, function(){
-		console.log('Server Listening on port `port`')
+		console.log('Server Listening on port ' + port)
 	});

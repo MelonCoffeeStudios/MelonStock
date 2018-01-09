@@ -29,7 +29,7 @@
     "mongoose": "^4.11.11",
     "morgan": "~1.0.0",
     "passport": "~0.1.17",
-    "passport-local": "~0.1.6",
+    "passport-local": "^0.1.6",
     "pdfreader": "^0.2.4"
   }
 }

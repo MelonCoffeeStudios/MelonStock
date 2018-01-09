@@ -1,0 +1,17 @@
+<div id="header-block">
+    <img src="/static/img/melon.png" class="header-img">
+    <div class="header-name">MelonStock</div>
+    <div class="header-company">East of England Co-op</div>
+    <div class="header-username"><%= user.info.firstName %></div>
+    <div class="header-time"></div>
+    <div class="header-date"></div>
+
+    <script type="text/javascript">
+        setInterval(function () {
+            var date = new Date();
+            $(".header-date").html(date.toLocaleDateString('en-UK'));
+            $(".header-time").html(date.toLocaleTimeString('en-UK'));
+
+        },1000)
+    </script>
+</div>

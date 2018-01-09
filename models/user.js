@@ -3,15 +3,15 @@
  *
  *
  * USER TYPES:
- * 'root'   : Root Access to everything
- * 'till'   : Access to POS only
- * 'till+'  : Access to POS and some Back Office tools
- * 'super'  : Supervisor, till+ and most Back Office
- * 'mngr'   : till+ and all Back Office
- * 'range'  : Ranging, add stock to system
- *            Create range plans for stores
- *            Add new Order Lines
- * 'ho'     : Head Office, access to everything (except server management)
+ * 'root' (1337)  : Root Access to everything
+ * 'till'  (1)    : Access to POS only
+ * 'till+' (2)    : Access to POS and some Back Office tools
+ * 'super' (3)    : Supervisor, till+ and most Back Office
+ * 'mngr'  (4)    : till+ and all Back Office
+ * 'range' (5)    : Ranging, add stock to system
+ *                  Create range plans for stores
+ *                  Add new Order Lines
+ * 'ho'    (6)    : Head Office, access to everything (except server management)
  *
  */
 
@@ -23,7 +23,6 @@ var Store    = require('./store');
 
 // define the schema for our user model
 var userSchema = mongoose.Schema({
-
     info	: 	{
         userID	         : Number,
         password     : String,
@@ -31,17 +30,16 @@ var userSchema = mongoose.Schema({
         lastName	 : String,
         store        : Number,
         dob          : Date,
-        prevStores   : {
+        prevStores   : [{
             store    : Number,
             dateFrom : Date,
             dateTo   : Date,
             role     : String
-        }
+        }]
     },
     auth    : {
         modifyAllUsers      : Boolean,
         modifyStoreUsers    : Boolean
-
     },
     userType: String,
     userTypePretty: String

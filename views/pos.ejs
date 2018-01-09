@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./pos/pos_head %>
+</head>
+<body class="container">
+
+<header>
+    <% include ./pos/pos_header %>
+</header>
+
+<main>
+
+    <div class="pos-left">
+        <div class="scan-list">
+            <table class="scan-list-table" cellspacing="0" cellpadding="0">
+                <col style="width:10%">
+                <col style="width:60%">
+                <col style="width:10%">
+                <col style="width:10%">
+                <col style="width:10%">
+
+                <thead>
+                    <th>#</th>
+                    <th>PRODUCT</th>
+                    <th>QTY</th>
+                    <th>PRICE</th>
+                    <th>TOTAL</th>
+                </thead>
+
+                <tbody class="scan-list-scanned">
+                    <tr>
+                        <td>1</td>
+                        <td>PCR NORFOLK CAKE @250G</td>
+                        <td>x2</td>
+                        <td>1.29</td>
+                        <td>2.58</td>
+                    </tr>
+                    <tr class="item-select">
+                        <td>2</td>
+                        <td>CLM COLEMANS MUSTARD &amp;350G</td>
+                        <td>x1</td>
+                        <td>1.99</td>
+                        <td>1.99</td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+        <div class="price-total">
+            £113.74
+        </div>
+    </div>
+
+    <div class="pos-right">
+        <div class="interface-container">
+            <div class="interface button-group-numbers">
+                <button class="interface button">1</button>
+                <button class="interface button">2</button>
+                <button class="interface button">3</button>
+
+                <br>
+
+                <button class="interface button">4</button>
+                <button class="interface button">5</button>
+                <button class="interface button">6</button>
+
+                <br>
+
+                <button class="interface button">7</button>
+                <button class="interface button">8</button>
+                <button class="interface button">9</button>
+
+                <br>
+
+                <button class="interface button">0</button>
+                <button class="interface button-wide">00</button>
+            </div>
+
+            <div class="interface button-group-enter">
+                <button class="interface button-tall">ENTER</button>
+            </div>
+
+            <div class="interface number-input-container">
+                <input type="text" class="interface number-input">
+                <button class="interface button backspace-button"><</button>
+            </div>
+
+            <div class="interface button-group-totals">
+                <button class="interface button-wide button-red">MANAGER MODE</button><br>
+                <button class="interface button-wide button-red">LINE VOID</button><br>
+                <button class="interface button-huge button-sub-total">SUB TOTAL</button>
+            </div>
+
+        </div>
+    </div>
+
+
+</main>
+
+
+
+</body>
+</html>

@@ -11,9 +11,11 @@
 
     <main>
         <div class="jumbotron">
-            <h1>This is great</h1>
-            <p>Welcome to templating using EJS</p>
+            <h2><b>You are logged in as: <%= user.info.firstName %> <%= user.info.lastName %></b></h2>
+            <p>With the user level: <%= user.userType %></p>
+
         </div>
+
     </main>
 
     <footer>

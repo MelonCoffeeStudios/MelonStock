@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <% include ./part/head %>
+    <script type="text/javascript" src="/static/js/profile.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/profile.css">
+</head>
+<body class="container">
+
+<header>
+    <% include ./part/header %>
+</header>
+
+<main>
+    <div class="jumbotron">
+        <h1>Error!</h1>
+        <p>Error Code: <%= code %></p>
+        <p><%= text %></p>
+    </div>
+
+</main>
+
+<footer>
+    <% include ./part/footer %>
+</footer>
+
+</body>
+</html>
