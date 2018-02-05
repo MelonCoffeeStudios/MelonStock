@@ -1,0 +1,34 @@
+<% include fullHead.ejs %>
+<main>
+
+    <div class="panel-group" id="settingsPane">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#settingsPane" href="#stockInfo">
+                        Add a stock unit</a>
+                </h4>
+            </div>
+            <div id="planData" class="panel-collapse collapse in">
+                <textarea name="data" class="form-control"></textarea>
+                <button class="btn btn-primary" name="submit">Submit</button>
+                <script>
+                    $(function () {
+                        $("[name=submit]").click(function () {
+                            $.post("/weirdData", {data:$("[name=data]").val()}, function (data) {
+                                console.log(data);
+                            })
+                        })
+                    })
+                </script>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <% include ./part/footer %>
+</footer>
+
+</body>
+</html>

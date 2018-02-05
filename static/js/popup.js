@@ -2,12 +2,6 @@
  ************** Popup Function *******************
  *************************************************/
 
-$(function () {
-    $(".popup-close").click(function () {
-        $('.popup').remove();
-    })
-})
-
 
 function generatePopup(inside) {
     var text =  '<div class="well popup addPrevStore">' +
@@ -18,5 +12,8 @@ function generatePopup(inside) {
                     inside +
                 '   </div>' +
                 '</div>';
-    return $($.parseHTML(text));
+    $("body").append($.parseHTML(text));
+    $(".popup-close").click(function () {
+        $('.popup').remove();
+    })
 }

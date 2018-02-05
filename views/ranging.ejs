@@ -1,0 +1,61 @@
+<% include fullHead.ejs %>
+<script type="text/javascript" src="/static/js/ranging.js"></script>
+<main>
+    <div class="jumbotron">
+        <h1>Range Management</h1>
+        <p>Welcome <%= user.info.firstName %>!</p>
+    </div>
+    <div class="panel-group" id="settingsPane">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h2 class="panel-title"><a href="/addStock"><button class="btn btn-warning">Add a Stock Item</button> </a></h2>
+
+
+                <h4>Search Stock</h4>
+                <table class="table table-condensed">
+                    <thead>
+                    <tr>
+                        <th>
+                            <div class="input-group">
+                                <input type="text" name="filter" class="form-control" onkeyup="search(this.value)" placeholder="Filter (Name/Barcode)">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-secondary" type="button">Go!</button>
+                                </span>
+                            </div>
+
+                        </th>
+                        <th>
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination">
+                                    <li class="page-item"><a class="page-link" href="#" name="page_prev">Previous</a></li>
+                                    <li class="page-item"><a class="page-link" href="#" name="page_current">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#" name="page_next">Next</a></li>
+                                </ul>
+                            </nav>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>Stock Name</th>
+                        <th>Stock SKU</th>
+                        <th>Stock Price</th>
+                        <th>Barcode</th>
+                    </tr>
+                    </thead>
+                    <tbody name="stockTable">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel-body">
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <% include ./part/footer %>
+</footer>
+
+</body>
+</html>

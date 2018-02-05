@@ -40,7 +40,9 @@ main {
 
 .scan-list-table * {
     padding-left: 5px;
+    cursor: pointer;
 }
+
 
 .item-select {
     background: #259C93;
@@ -127,6 +129,7 @@ main {
 .backspace-button {
     position: absolute;
     left: calc(30vw + 8px);
+    top: 0;
 }
 
 .interface .button {

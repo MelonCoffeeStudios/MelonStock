@@ -1,15 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <% include ./part/head %>
-</head>
-<body class="container">
-
-    <header>
-        <% include ./part/header %>
-        <script type="text/javascript" src="/static/js/editUser.js"></script>
-    </header>
-
+<% include fullHead.ejs %>
+    <script type="text/javascript" src="/static/js/editUser.js"></script>
+    <script type="text/javascript" src="/static/js/addPreviousStore.js"></script>
     <main>
         <div class="jumbotron">
             <h1>Add User</h1>
@@ -24,7 +15,7 @@
                 </div>
                 <div id="userInformation" class="panel-collapse collapse in">
                     <div class="panel-body">
-                        <form action="/action_page.php">
+                        <form action="">
                             <% if(level == 0) { %>
                                 <label for="store">Store Number</label>
                                 <input type="number" name="store" id="store" class="form-control">
@@ -46,49 +37,49 @@
                             </div>
                             <div class="form-group">
                                 <label>Previous Stores:</label><br>
-                                <button class="btn" style="margin-bottom: 5px;" id="addPrevButton">Add Store</button>
+                                <button type="button" class="btn" style="margin-bottom: 5px;" id="addPrevButton">Add Store</button>
                                 <div class="well" id="previousStoresWell">
                                     No stores defined...
                                 </div>
                             </div>
 
-                            <div class="well popup addPrevStore">
-                                <header>
-                                    <span class="glyphicon glyphicon-remove popup-close" title="Close Popup"></span>
-                                </header>
-                                <div class="popup popup-main">
-                                    <div class="form-group">
-                                        <label for="retailSelect">:</label>
-                                        <select class="form-control" id="retailSelect">
-                                            <option>1</option>
-                                            <option>2</option>
-                                            <option>3</option>
-                                            <option>4</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="store">Store Number:</label>
-                                        <input type="number" class="form-control" id="store" placeholder="Enter store number" name="store">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="dateFrom">Date from:</label>
-                                        <input type="date" class="form-control" id="dateFrom" placeholder="Enter date from" name="dateFrom">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="dateTo">Last Name:</label>
-                                        <input type="date" class="form-control" id="dateTo" name="dateTo">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="role">Select list:</label>
-                                        <select class="form-control" id="role">
-                                            <option value="till">Till</option>
-                                            <option value="till+">Till+</option>
-                                            <option value="super">Supervisor</option>
-                                            <option value="mngr">Manager</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+                            <!--<div class="well popup addPrevStore">-->
+                                <!--<header>-->
+                                    <!--<span class="glyphicon glyphicon-remove popup-close" title="Close Popup"></span>-->
+                                <!--</header>-->
+                                <!--<div class="popup popup-main">-->
+                                    <!--<div class="form-group">-->
+                                        <!--<label for="retailSelect">:</label>-->
+                                        <!--<select class="form-control" id="retailSelect">-->
+                                            <!--<option>1</option>-->
+                                            <!--<option>2</option>-->
+                                            <!--<option>3</option>-->
+                                            <!--<option>4</option>-->
+                                        <!--</select>-->
+                                    <!--</div>-->
+                                    <!--<div class="form-group">-->
+                                        <!--<label for="store">Store Number:</label>-->
+                                        <!--<input type="number" class="form-control" id="store" placeholder="Enter store number" name="store">-->
+                                    <!--</div>-->
+                                    <!--<div class="form-group">-->
+                                        <!--<label for="dateFrom">Date from:</label>-->
+                                        <!--<input type="date" class="form-control" id="dateFrom" placeholder="Enter date from" name="dateFrom">-->
+                                    <!--</div>-->
+                                    <!--<div class="form-group">-->
+                                        <!--<label for="dateTo">Last Name:</label>-->
+                                        <!--<input type="date" class="form-control" id="dateTo" name="dateTo">-->
+                                    <!--</div>-->
+                                    <!--<div class="form-group">-->
+                                        <!--<label for="role">Select list:</label>-->
+                                        <!--<select class="form-control" id="role">-->
+                                            <!--<option value="till">Till</option>-->
+                                            <!--<option value="till+">Till+</option>-->
+                                            <!--<option value="super">Supervisor</option>-->
+                                            <!--<option value="mngr">Manager</option>-->
+                                        <!--</select>-->
+                                    <!--</div>-->
+                                <!--</div>-->
+                            <!--</div>-->
                             * 'root' (1337)  : Root Access to everything
                             * 'till'  (1)    : Access to POS only
                             * 'till+' (2)    : Access to POS and some Back Office tools

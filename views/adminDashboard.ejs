@@ -20,34 +20,16 @@
                     <h2 class="panel-title">PDF biz</h2>
                 </div>
                 <div class="panel-body">
-                    <h4>Manage Users</h4>
                     <a href="/userManagement"><button class="btn btn-primary">Manage Users</button> </a>
                 </div>
-                <div class="panel-body">
-                    <h4>Upload PDF for data extraction</h4>
-                    <form ref='pdfUpload' 
-                      id='pdfUpload' 
-                      action='/pdfExtract' 
-                      method='post' 
-                      encType="multipart/form-data">
-                        <input type="file" name="fileData" />
-                        <input type='submit' value='Upload!' />
-                    </form>
 
-                    <div>
-                        <span>
-                        <%= text %>
-                            <table>
-                            <% text.forEach(function(rows){ %>
-                                <tr>
-                                    <% rows.forEach(function(dat){ %>
-                                        <td><%= dat %> </td>
-                                    <% }) %>
-                                </tr>
-                            <% }) %>
-                            </table>
-                        </span>
-                    </div>
+                <div class="panel-body">
+                    <a href="/ranging"><button class="btn btn-primary">Manage Stock</button> </a>
+                </div>
+
+
+                <div class="panel-body">
+                    <a href="/planData"><button class="btn btn-primary">Add stock by data</button> </a>
                 </div>
             </div>
         </div>

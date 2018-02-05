@@ -1,0 +1,168 @@
+<% include fullHead.ejs %>
+<script type="text/javascript" src="/static/js/addStock.js"></script>
+<main>
+
+    <div class="panel-group" id="settingsPane">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#settingsPane" href="#stockInfo">
+                        Add a stock unit</a>
+                </h4>
+            </div>
+            <div id="stockInfo" class="panel-collapse collapse in">
+
+                <div class="panel-body">
+                    <form action="/stock/add" method="post" name="stockForm">
+                        <input type="text" name="_id" hidden>
+
+                        <label for="fullTitle">Full Title</label>
+                        <input type="text" name="fullTitle" class="form-control" placeholder="Enter full title as provided">
+                        <br>
+
+                        <label for="shortTitle">Shorthand Title (For POS and Receipts)</label>
+                        <input type="text" name="shortTitle" class="form-control" placeholder="Enter shorthand title">
+
+                        <hr>
+
+                        <label for="sku">Enter SKU (Stock Keeping Unit) or select Auto-Gen</label>
+                        <input type="number" name="sku" class="form-control" placeholder="Enter SKU">
+                        <input type="checkbox" name="sku-autogen"> Auto-Gen<br>
+                        <br>
+                        <label for="barcode">Enter Barcode (If multiple, enter primary barcode)</label>
+                        <input type="number" name="barcode" class="form-control">
+                        <br>
+                        <label for="supplier">Enter Supplier Reference</label>
+                        <input type="text" name="supplier" class="form-control">
+
+                        <hr>
+
+                        <label for="price">Enter current price</label>
+                        <div class="input-group">
+                            <span class="input-group-addon">&pound;</span>
+                            <input type="number" name="price" step="any" min="0" class="form-control" onkeypress="return isNumberKey(this)" placeholder="Price" style="width: 10vw;">
+                        </div>
+
+                        <hr>
+
+                        <label for="size">Size of product (e.g. 29G, 1.5KG, 300ML,1.5L OR 1s, 2s for individually packaged stock)</label>
+                        <input type="text" name="size" class="form-control">
+
+                        <br>
+                        <input type="checkbox" name="allow-dimensions"> Define Dimensions?<br>
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label for="width">Width (mm)</label>
+                                    <input type="number" name="width" class="form-control" disabled>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="height">Height (mm)</label>
+                                    <input type="number" name="height" class="form-control" disabled>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="depth">Depth (mm)</label>
+                                    <input type="number" name="depth" class="form-control" disabled>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <br><br><br><hr>
+                        <label for="dep">Select Department</label>
+                        <div class="input-group">
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <select class="form-control" name="dep">
+                                            <option value="null" selected>Choose...</option>
+
+                                            <% var x = 0; %>
+                                            <% deps.forEach(function (dep) {  %>
+                                            <option value="<%= dep.departmentNum %>"><%= dep.departmentName %> - <%= dep.departmentNum%></option>
+                                            <% x = dep.departmentNum %>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        or
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" data="<%= x+1 %>" class="form-control" name="newDep" placeholder="New Department Name">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-warning" name="addNewDep">Add Department</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br>
+                        <label for="dep">Select Sub Department</label>
+                        <div class="input-group">
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <select class="form-control" name="subDep">
+                                            <option value="null" selected>Choose...</option>
+
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        or
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" data="null" class="form-control" name="newSubDep" placeholder="New Sub Department">
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="button" class="btn btn-warning" name="addNewSubDep">Add Sub Department</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <br>
+                        <hr>
+                        <br>
+                        <button class="btn btn-primary" name="submit">Add Stock!</button>
+
+                    </form>
+
+
+
+
+
+
+                    <!--dep         :   String, // Department of product-->
+                    <!--subdep      :   String, // Sub-Department of product-->
+                    <!--section     :   String, // Product section-->
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</main>
+
+<footer>
+    <% include ./part/footer %>
+</footer>
+
+</body>
+</html>

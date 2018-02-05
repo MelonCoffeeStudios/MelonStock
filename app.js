@@ -19,7 +19,11 @@
 	var cookieParser = require('cookie-parser');
 	var bodyParser   = require('body-parser');
 	var session      = require('express-session');
-	var User = require('./models/user.js')
+	var User = require('./models/user.js');
+	var Stock = require("./models/stock.js");
+	var Sale = require("./models/sale");
+	var Department = require("./models/department.js");
+    var Barcode = require('barcode');
 
 	var configDB = require('./config/database.js');
 	// configuration ===============================================================
@@ -39,7 +43,7 @@
 	app.set('view engine', 'ejs'); 
 
 	// required for passport
-	app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret
+	app.use(session({ secret: 'BigLoveForAllThingsNode' })); // session secret
 	app.use(passport.initialize());
 	app.use(passport.session()); // persistent login sessions
 	app.use(flash()); // use connect-flash for flash messages stored in session
@@ -53,12 +57,49 @@
 	});
 
 	app.get('/pos', isLoggedIn, function (req, res) {
+	    if(!req.user.currentSale){
+            var sale = new Sale({
+                userID  :   req.user.info.userID,
+                userName:   req.user.info.firstName
+            });
+            sale.save(function (err) {
+                if(err){console.log(err);}else{
+                    req.user.currentSale = sale._id;
+                    req.user.save(function (err2) {
+                        if(err2){console.log(err2)}else{
+                            res.render('pos', {
+                                user:	req.user
+                            });
+                        }
+                    })
 
-		res.render('pos', {
-			user:	req.user
-		});
+                }
+            });
+
+        }else {
+
+            res.render('pos', {
+                user: req.user
+            });
+        }
 
     });
+	
+	app.post('/sale/subTotal', isLoggedIn, function (req, res) {
+        if(req.user.currentSale === req.body._id) {
+            Sale.subTotal(req.body, function (err, doc) {
+
+            })
+        }
+    });
+
+	app.post('/sale/retrieve', isLoggedIn, function (req, res) {
+        if(req.body._id === req.user.currentSale){
+            Sale.findOne({_id:req.user.currentSale}, function (err, doc) {
+                res.send(err?{err:true, errMsg: err}: doc);
+            })
+        }
+    })
 
 	// PROFILE
 	app.get('/profile', isLoggedIn, function(req, res) {
@@ -121,10 +162,10 @@
 		var rettt = []
 		function printRows() {
 			var str = '';
-		  	Object.keys(rows) // => array of y-positions (type: float) 
-		    	.sort((y1, y2) => parseFloat(y1) - parseFloat(y2)) // sort float positions 
-		    	.forEach((y) => str += (rows[y] || []).join('\n')/*console.log((rows[y] || []).join(''))*/);
-		    	// console.log(str);
+
+            // Object.keys(rows).sort((y1, y2) => parseFloat(y1) - parseFloat(y2)) // sort float positions
+		    	// .forEach((y) => str += (rows[y] || []).join('\n')/*console.log((rows[y] || []).join(''))*/);
+		    	// // console.log(str);
 		    return str;
 		}
 		var retString = '';
@@ -155,22 +196,12 @@
 	});
 
 	app.get('/editUser/:id', isLoggedIn, function (req, res) {
-    if(req.user.auth.modifyAllUsers){
         User.findById(req.params.id, function (err, u) {
             res.render('editUser.ejs', {
                 user: req.user,
                 userEdit: u
             })
         })
-
-    } else if(req.user.auth.modifyStoreUsers) {
-        // TODO:Render store user management
-
-    }else{
-        // Unauth, send error!
-        // TODO: Create type based error page
-        res.status(500).send();
-    }
 });
 
 	app.get('/addUser', isLoggedIn, function (req, res) {
@@ -196,7 +227,7 @@
 
 
 	app.get('/userManagement', isLoggedIn, function (req, res) {
-		if(req.user.auth.modifyAllUsers){
+		// if(req.user.auth.modifyAllUsers){
 			User.find({}, function (err, users) {
 				res.render('userManagement.ejs', {
 					user: req.user,
@@ -204,19 +235,342 @@
 				})
 			})
 
-		} else if(req.user.auth.modifyStoreUsers) {
+		// } else if(req.user.auth.modifyStoreUsers) {
 			// TODO:Render store user management
 
-		}else{
+		// }else{
 			// Unauth, send error!
 			// TODO: Create type based error page
-			res.status(500).send();
-		}
+			// res.status(500).send();
+		// }
 	});
 
+	app.get("/ranging", isLoggedIn, function (req, res) {
+		if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
+		    Stock.find({}, function (err, stock) {
+		        if(!err) {
+                    res.render("ranging.ejs", {
+                        user: req.user,
+                        stock: stock
+                    })
+                }else{
+                    res.render("ranging.ejs", {
+                    user        :   req.user,
+                        stock   :   null
+                    })
+                }
+            });
+		}
+    });
+
+    app.get("/addStock", isLoggedIn, function (req, res) {
+        if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
+            Department.find({}, function (err, docs) {
+                if(!err){
+                    if(!req.query.good) {
+                        res.render("addStock.ejs", {
+                            user: req.user,
+                            deps: docs
+                        })
+                    }else {
+                        res.render("addStock.ejs", {
+                            user: req.user,
+                            deps: docs,
+                            action  :   {
+                                type: notify
+                            }
+                        })
+                    }
+                }else {throw err;}
+            })
+
+        }
+    });
+
+    app.post("/stock/genSKU", isLoggedIn, function (req, res) {
+        if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
+            var newStock = new Stock({shortTitle:"EMPTY", empty: true}); // CREATE Empty Stock (SKU should be auto genned)
+            newStock.save(function (err, saved) {
+                res.send({sku: saved.sku, id: saved._id});
+            });
+
+        }
+    });
+
+    app.post("/stock/get", isLoggedIn, function (req, res) {
+        var page = 1;
+        var pageLimit = 25;
+        if(req.body.pageLimit){
+            pageLimit = req.body.pageLimit;
+        }
+        if(req.body.page){
+            page = req.body.page;
+        }
+        
+        Stock.findPaginated({},function (err, docs) {
+            // docs.documents.forEach(function (doc, i, arr) {
+            //     arr[i].barcodeImg = [];
+            //     doc.barcode.forEach(function (b) {
+            //         console.log(b);
+            //         var code128 = Barcode('code128', {
+            //             data:   "" + b,
+            //             width: 600,
+            //             height: 125
+            //         });
+            //         code128.getBase64(function (err, b64) {
+            //             if(!err){
+            //                 console.log(b64);
+            //                 arr[i].barcodeImg.push(b64)
+            //             }else {
+            //                 console.log(err);
+            //             }
+            //
+            //
+            //         })
+            //     })
+            // });
+
+            res.send(err?{err:true, errMsg:err}:docs);
+        },pageLimit, page);
+    });
+
+    app.post("/stock/genBarcode/:sku", isLoggedIn, function (req, res) {
+        Stock.findOne({sku:req.params.sku}, function (err, doc) {
+            if(!err) {
+                var code128 = Barcode('code128', {
+                    data: "" + doc.barcode[0],
+                    width: 400,
+                    height: 100
+                });
+                code128.getBase64(function (err, b64) {
+                    if (!err) {
+                        console.log(b64);
+                        doc.barcodeImg = b64;
+
+                        doc.save(function (err) {
+                            res.send(err?{err:true, errMsg:err}:doc);
+                        })
+                    } else {
+                        console.log(err);
+                    }
+                })
+            }
+        })
+    });
+
+    app.post("/stock/get/:query", isLoggedIn, function (req, res) {
+        var q = req.params.query;
+        var query = /q/i;
+        var page = 1;
+        var pageLimit = 25;
+        if(req.body.pageLimit){
+            pageLimit = req.body.pageLimit;
+        }
+        if(req.body.page){
+            page = req.body.page;
+        }
+        console.log("Query: " + q);
+
+        Stock.findPaginated({
+            fullTitle   :   {
+                $regex  :   req.params.query,
+                $options:   "i"
+            }
+        }, function (err, docs) {
+            console.log(docs);
+            res.send(err?{err:true, errMsg: err}: docs);
+        }, pageLimit, page)
+    })
+
+    app.post("/stock/barcode/:barcode", isLoggedIn, function (req, res) {
+        Stock.findOne({barcode:req.params.barcode}, function (err, doc) {
+            if(err){
+                res.send({err:true,errMsg:err});
+            }else{
+                Sale.addItem(req.user.currentSale, doc, req.params.barcode, function (err, sale) {
+                    res.send(err?{err:true, errMsg: err}:sale);
+                })
+            }
+        })
+    });
+
+    app.post("/stock/add", isLoggedIn, function (req, res) {
+        if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
+            console.log(req.body);
+            if(req.body._id) {   // IF AUTO-GEN
+                Stock.findById(req.body._id, function (err, stock) {
+                    stock.empty = false;
+                    stock.supplier = req.body.supplier;
+                    stock.barcode.push(req.body.barcode);
+                    stock.shortTitle = req.body.shortTitle;
+                    stock.fullTitle = req.body.fullTitle;
+                    stock.price =  req.body.price;
+                    stock.size = req.body.size;
+                    stock.dep = req.body.dep;
+                    stock.subDep = req.body.subDep;
+                    if(req.body.width && req.body.height && req.body.depth){
+                        stock.dimensions = {
+                            width   :   req.body.width,
+                            height  :   req.body.height,
+                            depth   :   req.body.depth
+                        }
+                    }
+
+                    stock.save(function (err) {
+                        if(!err){
+                            res.redirect("/addStock?good")
+                        }else {
+                            res.send({err:true, errMsg:err});
+                        }
+                    })
+
+                })
+            }else{  // IF NEW STOCK
+                Stock.find({sku:req.body.sku}, function (err, docs) {
+                    if(!err){
+                        if(!docs.length){
+                            var stock = new Stock();
+
+                            stock.empty = false;
+                            stock.supplier = req.body.supplier;
+                            stock.barcode.push(req.body.barcode);
+                            stock.shortTitle = req.body.shortTitle;
+                            stock.fullTitle = req.body.fullTitle;
+                            stock.price =  req.body.price;
+                            stock.size = req.body.size;
+                            stock.dep = req.body.dep;
+                            stock.subDep = req.body.subDep;
+                            if(req.body.width && req.body.height && req.body.depth){
+                                stock.dimensions = {
+                                    width   :   req.body.width,
+                                    height  :   req.body.height,
+                                    depth   :   req.body.depth
+                                }
+                            }
+
+                            stock.save(function (err) {
+                                if(!err){
+                                    res.redirect("/addStock?good")
+                                }else {
+                                    res.send({err:true, errMsg:err});
+                                }
+                            });
+                        }else{
+                            res.send({err:true, errMsg:"SKU already exists!"})
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    app.post("/departments/addDep", isLoggedIn, function (req, res) {
+        if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
+            var newDep = new Department(
+                {
+                    departmentName  :   req.body.departmentName,
+                    departmentNum   :   req.body.departmentNum
+                });
+            newDep.save(function (err) {
+                if(!err){
+                    res.send({err:false})
+                }
+            })
+        }
+    });
+
+    app.post("/departments/addSubDep", isLoggedIn, function (req, res) {
+        if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
+            console.log(req.body.depNum)
+            Department.addSubDep(req.body.depNum, req.body.subDepName, req.body.subDepNum, function (cb) {
+                res.send(cb);
+            })
+
+        }
+    });
+
+    app.get("/departments/getDep/:id", isLoggedIn, function (req, res) {
+        Department.findOne(
+            {
+                departmentNum   : req.params.id
+            }, function (err, doc) {
+                if(!err) {
+                    res.send(doc);
+                }else {
+                    res.send({err:true,})
+                }
+            })
+    });
 
 
+    app.get("/planData", isLoggedIn, function (req, res) {
+        res.render("planData.ejs");
+    });
 
+    app.post("/planData", isLoggedIn, function (req, res) {
+        var data = req.body.data;
+        data = data.split("\n");
+        var newData = [];
+        var re = /\d[^ ]*|".*?"|(^|\s+)\w(\s+|$)/gi;
+        for(var i = 0; i < data.length; i++){
+            var tmp = data[i].match(re);
+            var s = new Stock();
+            var o = {};
+
+            s.barcode = tmp[6];
+            s.shortTitle = (tmp[7].replace("\"", ""));
+            s.complete = false;
+            s.fullTitle = s.shortTitle;
+
+            var x = s.shortTitle.split(" ");
+            s.supplier = x[0];
+            s.size = ((tmp[8] + tmp[9]).replace(" ", ""));
+            s.price = (Math.random() * 10).toFixed(2);
+            newData[i] = s;
+
+            s.save(function (err) {
+                if(err){
+                   console.log("ERROR" + err)
+                }
+            })
+
+        }
+        res.send(newData);
+    });
+
+
+    app.post("/weirdData", function (req, res) {
+        var text = req.body.data;
+        var items = {};
+        var i = 0;
+        var j = 0;
+        var tmp = text.split("\n");
+        tmp.forEach(function (item) {
+            var obj = item.split(",");
+            // console.log(obj);
+            if(!items[obj[0]]){
+                // console.log(obj[0]);
+                items[obj[0]] = {};
+                items[obj[0]].sku = obj[0];
+                items[obj[0]].fullTitle = obj[1];
+                items[obj[0]].price = obj[2];
+
+                var s = new Stock({fullTitle: obj[1], price:obj[2]});
+                s.save(function (err) {
+                    if(err){
+                        console.log(err);
+                        console.log(item);
+                    }
+                })
+                j++;
+            }else{
+                i++;
+            }
+        })
+        console.log("Number of Dupes: ", i);
+        console.log("Out of: ", tmp.length);
+        res.send(items);
+    });
 
 
 
@@ -236,7 +590,7 @@
         res.render('login.ejs', { message: req.flash('loginMessage') }); 
     });
     app.post('/login', passport.authenticate('local-login', {
-        successRedirect : '/', // redirect to the secure profile section
+        successRedirect : '/adminDashboard', // redirect to the secure profile section
         failureRedirect : '/login', // redirect back to the signup page if there is an error
         failureFlash : true // allow flash messages
     }));

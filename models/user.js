@@ -41,6 +41,8 @@ var userSchema = mongoose.Schema({
         modifyAllUsers      : Boolean,
         modifyStoreUsers    : Boolean
     },
+    currentSale :   String,
+    previousSales   :   [String],
     userType: String,
     userTypePretty: String
 });

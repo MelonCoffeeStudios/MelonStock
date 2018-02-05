@@ -9,6 +9,13 @@
     <% include ./pos/pos_header %>
 </header>
 
+<script>
+    var currentSale = <%- JSON.stringify(user.currentSale) %>;
+</script>
+
+<div class="notifications">
+
+</div>
 <main>
 
     <div class="pos-left">
@@ -28,62 +35,48 @@
                     <th>TOTAL</th>
                 </thead>
 
-                <tbody class="scan-list-scanned">
-                    <tr>
-                        <td>1</td>
-                        <td>PCR NORFOLK CAKE @250G</td>
-                        <td>x2</td>
-                        <td>1.29</td>
-                        <td>2.58</td>
-                    </tr>
-                    <tr class="item-select">
-                        <td>2</td>
-                        <td>CLM COLEMANS MUSTARD &amp;350G</td>
-                        <td>x1</td>
-                        <td>1.99</td>
-                        <td>1.99</td>
-                    </tr>
+                <tbody class="scan-list-scanned" name="scanned">
                 </tbody>
 
             </table>
         </div>
-        <div class="price-total">
-            £113.74
+        <div class="price-total" name="total">
+            £0.00
         </div>
     </div>
 
     <div class="pos-right">
         <div class="interface-container">
             <div class="interface button-group-numbers">
-                <button class="interface button">1</button>
-                <button class="interface button">2</button>
-                <button class="interface button">3</button>
+                <button class="interface button" val="1" name="numButton">1</button>
+                <button class="interface button" val="2" name="numButton">2</button>
+                <button class="interface button" val="3" name="numButton">3</button>
 
                 <br>
 
-                <button class="interface button">4</button>
-                <button class="interface button">5</button>
-                <button class="interface button">6</button>
+                <button class="interface button" val="4" name="numButton">4</button>
+                <button class="interface button" val="5" name="numButton">5</button>
+                <button class="interface button" val="6" name="numButton">6</button>
 
                 <br>
 
-                <button class="interface button">7</button>
-                <button class="interface button">8</button>
-                <button class="interface button">9</button>
+                <button class="interface button" val="7" name="numButton">7</button>
+                <button class="interface button" val="8" name="numButton">8</button>
+                <button class="interface button" val="9" name="numButton">9</button>
 
                 <br>
 
-                <button class="interface button">0</button>
-                <button class="interface button-wide">00</button>
+                <button class="interface button" val="0" name="numButton">0</button>
+                <button class="interface button-wide" val="00" name="numButton">00</button>
             </div>
 
             <div class="interface button-group-enter">
-                <button class="interface button-tall">ENTER</button>
+                <button class="interface button-tall" name="enter">ENTER</button>
             </div>
 
             <div class="interface number-input-container">
-                <input type="text" class="interface number-input">
-                <button class="interface button backspace-button"><</button>
+                <input type="text" class="interface number-input" name="in">
+                <button class="interface button backspace-button" name="backspace"><</button>
             </div>
 
             <div class="interface button-group-totals">

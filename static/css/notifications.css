@@ -1,0 +1,45 @@
+
+.notifications {
+    z-index: 100000;
+    width: 20vw;
+    height: auto;
+
+    position: fixed;
+
+    left: 40vw;
+    top: 1vh;
+}
+
+.notification {
+    overflow: hidden;
+
+    z-index: 1000000;
+
+    font-weight: 900;
+
+    width: 20vw;
+
+
+    padding: 10px 20px 10px 20px;
+
+    background: rgba(150, 14, 3, .8);
+
+    -webkit-border-radius: 25px;
+    -moz-border-radius: 25px;
+    border-radius: 25px;
+
+    margin-top: 100vh;
+
+
+    transition: margin-top 1s ease-in-out;
+
+}
+
+.notification.slideIn {
+    margin-top: 10px;
+}
+
+
+.notification.good {
+    background: rgba(14, 150, 3, .7);
+}

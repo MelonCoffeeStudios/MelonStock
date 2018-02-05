@@ -1,3 +1,5 @@
+
+
 <nav class="navbar navbar-default" role="navigation">
     <div class="container-fluid">
 
@@ -11,7 +13,7 @@
 
         <ul class="nav navbar-nav">
             <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
+            <li><a href="/pos">About</a></li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
           <!-- <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li> -->
@@ -19,6 +21,7 @@
                 <% if(user.userType == "root"){ %>
                     <li><a href="/adminDashboard"><span class="glyphicons glyphicons-use"> Dashboard</span>
                 <% } %>
+                <li><a href="/pos">POS (REMOVE ME) </a> </li>
                 <li><a href="/profile"><span class="glyphicons glyphicons-use"> Profile</span>
                 <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
             <% }else{ %>
