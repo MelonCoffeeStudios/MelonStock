@@ -7,7 +7,12 @@ var storeSchema  = mongoose.Schema({
     storeName   : String,
     manager     : Number,
     staff       : [Number],
-    address     : String
+    address     : String,
+    stock   :   [{
+        sku         :   Number,
+        qty         :   Number,
+        useBy       :   Date
+    }]
 });
 
 // create the model for users and expose it to our app

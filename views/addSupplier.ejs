@@ -1,0 +1,338 @@
+<% include fullHead.ejs %>
+<script type="text/javascript" src="/static/js/addSupplier.js"></script>
+<main>
+
+    <div class="panel-group" id="settingsPane">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#settingsPane" href="#supplierInfo">
+                        Add a Supplier</a>
+                </h4>
+            </div>
+            <div id="supplierInfo" class="panel-collapse collapse in">
+
+                <div class="panel-body">
+                    <form action="/stock/add" method="post" name="supplierForm">
+                        <input type="text" name="_id" hidden>
+
+                        <label for="name">Full Supplier Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Enter full name as provided">
+                        <br>
+
+                        <label for="code">Shorthand Supplier Code (For POS and Receipts)</label>
+                        <input type="text" name="code" class="form-control" placeholder="Enter shorthand code">
+
+                        <hr>
+                        <div style="width: 100%;text-align: center;">
+                            <h5>Supplier Availability</h5>
+                        </div>
+                        <!--name        :   String,-->
+                        <!--code        :   String,-->
+                        <!--info        :   {-->
+                        <!--contact :   {-->
+                        <!--name    :   String,-->
+                        <!--email   :   String,-->
+                        <!--address :   String,-->
+                        <!--postcode:   String-->
+                        <!--}-->
+                        <!--},-->
+                        <!--email       :   String,-->
+
+                        <div class="input-group" style="display: inline-block;width: 100%;text-align: center; font-size: 75%">
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="mondayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning" enabled="false"  name="daySelect" day="monday" style="width: 135px;">Monday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="mondayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                            <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="mondayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                            <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="mondayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="mondayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="tuesdayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning" enabled="false"  name="daySelect" day="tuesday" style="width: 135px;">Tuesday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="tuesdayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="tuesdayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="tuesdayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="tuesdayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="wednesdayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning"  enabled="false"  name="daySelect" day="wednesday" style="width: 135px;">Wednesday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="wednesdayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="wednesdayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="wednesdayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="wednesdayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="thursdayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning" enabled="false" name="daySelect" day="thursday" style="width: 135px;">Thursday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="thursdayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="thursdayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="thursdayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="thursdayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="fridayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning"  enabled="false" name="daySelect" day="friday" style="width: 135px;">Friday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="fridayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="fridayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="fridayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="fridayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="saturdayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning" enabled="false"  name="daySelect" day="saturday" style="width: 135px;">Saturday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="saturdayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="saturdayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="saturdayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="saturdayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group" style="margin-left: calc(7% - 57px);width: 135px;float: left;" name="sundayContainer">
+                                <div class="input-group" style="width: 100px;">
+                                    <button class="btn btn-warning" enabled="false"  name="daySelect" day="sunday" style="width: 135px;">Sunday</button>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="sundayFromH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="sundayFromM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <br>
+                                <div style="width:100%;text-align: center">To</div>
+                                <br>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Hour</span>
+                                    <select class="form-control" name="sundayToH" disabled>
+                                        <% for(var i = 0; i < 24; i++){ %>
+                                        <option value="<%= i %>"><%= i %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-addon">Minute</span>
+                                    <select class="form-control" name="sundayToM" disabled>
+                                        <% for(var i = 0; i < 6; i++){ %>
+                                        <option value="<%= i*10 %>"><%= i*10 %></option>
+                                        <% }%>
+                                    </select>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <% include ./part/footer %>
+</footer>
+</body>
+</html>

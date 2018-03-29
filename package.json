@@ -17,15 +17,18 @@
   },
   "homepage": "https://github.com/MelonCoffeeStudios/MelonStock#readme",
   "dependencies": {
+    "async": "^2.6.0",
     "barcode": "^0.1.0",
     "bcrypt-nodejs": "latest",
     "body-parser": "~1.0.0",
     "connect-flash": "~0.1.1",
     "cookie-parser": "~1.0.0",
+    "csv-reader": "^1.0.1",
     "ejs": "^2.5.7",
     "express": "^4.15.4",
     "express-fileupload": "^0.2.0",
     "express-session": "~1.0.0",
+    "line-by-line": "^0.1.6",
     "lodash.merge": "^4.6.0",
     "method-override": "~1.0.0",
     "mongoose": "^4.11.11",
@@ -35,6 +38,7 @@
     "passport": "~0.1.17",
     "passport-local": "^0.1.6",
     "pdfreader": "^0.2.4",
+    "socket.io": "^2.0.4",
     "through": "^2.3.8",
     "xregexp-lookbehind": "^1.0.0"
   }

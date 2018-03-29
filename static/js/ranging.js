@@ -49,8 +49,8 @@ function getAll(page) {
                         "<td>"+stock.sku+"</td>" +
                         "<td>&pound;"+stock.price.toFixed(2)+"</td>" +
                         "<td barcodeSKU='"+ stock.sku +"'>"+(stock.barcodeImg?
-                            "<img src='" + stock.barcodeImg + "' width='200px;'>":
-                            "<button class='btn btn-warning' onclick='genBarcode(this)' name='genBarcode' sku='" + stock.sku + "'>Generate Barcode</button> </td>") +
+                            "<img src='" + stock.barcodeImg + "' width='200px;'><br>"+stock.barcode[0]:
+                            "<button class='btn btn-warning' onclick='genBarcode(this)' name='genBarcode' sku='" + stock.sku + "'>Generate Barcode</button><br>"+stock.barcode[0] + " </td>") +
                         "</tr>";
                 }
             });
@@ -76,8 +76,8 @@ function getAll(page) {
                         "<td>"+stock.sku+"</td>" +
                         "<td>&pound;"+stock.price.toFixed(2)+"</td>" +
                         "<td barcodeSKU='"+ stock.sku +"'>"+(stock.barcodeImg?
-                            "<img src='" + stock.barcodeImg + "' width='200px;'>":
-                            "<button class='btn btn-warning' onclick='genBarcode(this)' name='genBarcode' sku='" + stock.sku + "'>Generate Barcode</button> </td>") +
+                            "<img src='" + stock.barcodeImg + "' width='200px;'><br>"+stock.barcode[0]:
+                            "<button class='btn btn-warning' onclick='genBarcode(this)' name='genBarcode' sku='" + stock.sku + "'>Generate Barcode</button><br>"+stock.barcode[0]+" </td>") +
                         "</tr>";
                 }
             });

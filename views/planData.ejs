@@ -2,6 +2,56 @@
 <main>
 
     <div class="panel-group" id="settingsPane">
+        <label for="dep">Select Department</label>
+        <div class="input-group">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-6">
+                        <select class="form-control" name="dep">
+                            <option value="null" selected>Choose...</option>
+
+                            <% var x = 0; %>
+                            <% deps.forEach(function (dep) {  %>
+                            <option value="<%= dep.departmentNum %>"><%= dep.departmentName %> - <%= dep.departmentNum%></option>
+                            <% x = dep.departmentNum %>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        or
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" data="<%= x+1 %>" class="form-control" name="newDep" placeholder="New Department Name">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-warning" name="addNewDep">Add Department</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <label for="dep">Select Sub Department</label>
+        <div class="input-group">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-6">
+                        <select class="form-control" name="subDep">
+                            <option value="null" selected>Choose...</option>
+
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        or
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" data="null" class="form-control" name="newSubDep" placeholder="New Sub Department">
+                    </div>
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-warning" name="addNewSubDep">Add Sub Department</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h4 class="panel-title">
@@ -15,8 +65,9 @@
                 <script>
                     $(function () {
                         $("[name=submit]").click(function () {
-                            $.post("/weirdData", {data:$("[name=data]").val()}, function (data) {
+                            $.post("/planData", {data:$("[name=data]").val(), dep:$("[name=dep]").val(),subdep:$("[name=subDep]").val()}, function (data) {
                                 console.log(data);
+                                location.reload(true);
                             })
                         })
                     })
@@ -25,6 +76,87 @@
         </div>
     </div>
 </main>
+
+
+<script>
+    $(function () {
+
+
+        $("[name=dep]").change(function () {
+            $.get("/departments/getDep/" + this.value, function (data) {
+                var opts = "";
+                var num = 1;
+                console.log(data.subDeps);
+                if(data.subDeps.length === 0){
+                    opts += "<option value='null'>Please Create Sub Department -></option>"
+                }else {
+                    data.subDeps.forEach(function (dep) {
+                        opts += "<option value='" + dep.subDepNum + "'>" + dep.subDepName + " - " + dep.subDepNum + "</option>"
+                        num = dep.subDepNum + 1;
+                    });
+                    $("[name=subDep]").removeAttr("hidden")
+
+                }
+                $("[name=subDep]").html(opts);
+                $("[name=newSubDep]").attr("data", num);
+                // console.log(data)
+            })
+        })
+
+
+        $("[name=addNewDep]").click(function () {
+            if($("[name=newDep]").val() != "") {
+                addDep($("[name=newDep]").val(), $("[name=newDep]").attr("data"));
+                $("[name=newDep]")
+            }else{
+                notify("Error", "Please supply Department Name!")
+            }
+        })
+
+        $("[name=addNewSubDep]").click(function () {
+            if(!$("[name=newSubDep]").val() == "") {
+                addSubDep($("[name=dep]").val(), $("[name=newSubDep]").val(), $("[name=newSubDep]").attr("data"));
+
+            }else{
+                notify("Error","Please supply Sub Department Name!");
+            }
+        })
+    })
+
+    function addDep(depName, depNum) {
+        $.post("/departments/addDep", {
+            departmentName  :   depName,
+            departmentNum   :   depNum
+        }, function (data) {
+            if(data.err === false){
+                $("[name=dep]").append("<option value='" + depNum + "'>" + depName + " - " + depNum + "</option>");
+                $("[name=newSubDep]").attr("data", 0);
+                $("[name=dep]").val(depNum);
+                notify("Success", "New department: " + depName + " was created successfully!<br>Please Add A New Sub Department", true);
+                $("[name=dep]").trigger("change");
+            }else{
+                notify("Error", data.errMsg);
+            }
+            console.log(data);
+        })
+    }
+
+    function addSubDep(depNum, subDepName, subDepNum) {
+        $.post("/departments/addSubDep", {
+            depNum   :   depNum,
+            subDepName      :   subDepName,
+            subDepNum       :   subDepNum
+        }, function (data) {
+            if(data.err){
+                notify("Error", data.errMsg)
+            }else{
+                notify("Success", "New sub department: " + subDepName + " was created successfully!", true);
+                $("[name=subDep]").append("<option value='" + subDepNum + "'>" + subDepName + " - " + subDepNum + "</option>");
+                $("[name=subDep]").val(subDepNum);
+            }
+        })
+    }
+</script>
 
 <footer>
     <% include ./part/footer %>

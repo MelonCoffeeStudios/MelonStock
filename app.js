@@ -9,6 +9,7 @@
 	const express = require('express')
 	const app = express()
 	var port    =   process.env.PORT || 8080;
+    var server = require("http").createServer(app);
 	var mongoose = require('mongoose');
 	var passport = require('passport');
 	var flash    = require('connect-flash');
@@ -24,8 +25,13 @@
 	var Sale = require("./models/sale");
 	var Department = require("./models/department.js");
     var Barcode = require('barcode');
+    var SimulateData = require("./simulateData");
+    var io = require("socket.io")(server);
+    var async = require('async');
 
-	var configDB = require('./config/database.js');
+
+
+    var configDB = require('./config/database.js');
 	// configuration ===============================================================
 	mongoose.connect(configDB.url, {useMongoClient:true}); // connect to our database
 
@@ -34,9 +40,11 @@
 	// set up our express application
 	app.use(morgan('dev')); // log every request to the console
 	app.use(cookieParser()); // read cookies (needed for auth)
-	app.use(bodyParser()); // get information from html forms
+	// app.use(bodyParser()); // get information from html forms
 	app.use(fileUpload());
 
+    app.use(bodyParser.json({limit: '50mb'}));
+    app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 	// setup views
 	app.use('/static', express.static('static'));
@@ -47,6 +55,14 @@
 	app.use(passport.initialize());
 	app.use(passport.session()); // persistent login sessions
 	app.use(flash()); // use connect-flash for flash messages stored in session
+
+    io.on("connection", function (client) {
+        client.on("join", function (room) {
+            client.join(room)
+        })
+    })
+
+
 
 
  // App Routes
@@ -99,7 +115,19 @@
                 res.send(err?{err:true, errMsg: err}: doc);
             })
         }
-    })
+    });
+
+	app.get("/supplier/dashboard", isLoggedIn, function (req, res) {
+       res.render("supplier", {
+           user :   req.user
+       })
+    });
+
+	app.get("/supplier/add", isLoggedIn, function (req, res) {
+       res.render("addSupplier", {
+           user :   req.user
+       })
+    });
 
 	// PROFILE
 	app.get('/profile', isLoggedIn, function(req, res) {
@@ -211,7 +239,7 @@
 				level	: level
 			})
         })
-    })
+    });
 
 
 	app.get('/error/:code', function (req, res) {
@@ -223,7 +251,7 @@
 				});
 				break;
 		}
-    })
+    });
 
 
 	app.get('/userManagement', isLoggedIn, function (req, res) {
@@ -380,7 +408,7 @@
             console.log(docs);
             res.send(err?{err:true, errMsg: err}: docs);
         }, pageLimit, page)
-    })
+    });
 
     app.post("/stock/barcode/:barcode", isLoggedIn, function (req, res) {
         Stock.findOne({barcode:req.params.barcode}, function (err, doc) {
@@ -504,10 +532,88 @@
 
 
     app.get("/planData", isLoggedIn, function (req, res) {
-        res.render("planData.ejs");
+        Department.find({}, function (err, docs) {
+            if(!err){
+                if(!req.query.good) {
+                    res.render("planData.ejs", {
+                        user: req.user,
+                        deps: docs
+                    })
+                }else {
+                    res.render("planData.ejs", {
+                        user: req.user,
+                        deps: docs,
+                        action  :   {
+                            type: notify
+                        }
+                    })
+                }
+            }else {throw err;}
+        })
+        // res.render("planData.ejs");
     });
 
-    app.post("/planData", isLoggedIn, function (req, res) {
+    app.post("/planData", isLoggedIn, function (req,res) {
+        var data = req.body.data;
+        data = data.split("\n");
+        var max = data.length;
+        var cur = 0;
+        async.eachSeries(data, function (line, done) {
+            line = line.split(",");
+            console.log(cur+"/"+max + ": " + line[0]);
+            if(!Number.isNaN(parseInt(line[0]))){
+
+                cur++;
+                Stock.findOne({barcode:parseInt(line[0])}, function (err, doc) {
+                    if(err){
+                        console.log(err);
+                    }
+                    if(!doc){
+                        console.log("No stock found for barcode: " + line[0])
+                        done();
+                    }else{
+                        doc.SIM_Qty_Sold = parseInt(line[2]);
+                        doc.save(function (err) {
+                            done();
+                        })
+                    }
+                })
+            }else{
+                done();
+            }
+
+        }, function (err) {
+            res.send(200)
+        })
+    })
+
+    app.post("/planDataNewer", isLoggedIn, function (req, res) {
+        var data = req.body.data;
+        data = data.split("\n");
+        var dep = req.body.dep;
+        var subdep = req.body.subdep;
+        data.forEach(function (value) {
+            value = value.split("\t");
+            var s = new Stock();
+            s.barcode = value[0];
+            s.fullTitle = value[1];
+            s.shortTitle=value[1];
+            s.dep = dep;
+            s.subDep = subdep;
+            s.price = value[10];
+            console.log(value);
+            s.save(function (err) {
+                if(err){
+                    console.log("ERROR" + err)
+                }
+            })
+
+
+        })
+        res.send("Done")
+    })
+
+    app.post("/planDataOLD", isLoggedIn, function (req, res) {
         var data = req.body.data;
         data = data.split("\n");
         var newData = [];
@@ -571,6 +677,68 @@
         console.log("Out of: ", tmp.length);
         res.send(items);
     });
+
+
+
+
+
+    {       ///// SIMULATE DASHBOARD
+        app.get("/simDash", isLoggedIn, function (req, res) {
+            res.render("SimDash.ejs",
+                {
+                    user:req.user
+                }
+                )
+        })
+
+        app.post("/sim/runSim", isLoggedIn, function (req, res) {
+            var dayPattern = [0.5367,0.3111,0.1974,0.0884,0.0018,0.0001,0.0015,0.3025,2.0201,2.6901,4.7209,6.8918,10.4405,10.7798,8.2832,8.6083,8.7329,9.2582,7.4610,5.6966,4.7835,4.1838,3.2093,0.8006];
+            var s = new SimulateData("HI",365, dayPattern, io);
+            res.send(200);
+            s.run(function (result) {
+                // res.send(result);
+            });
+
+
+
+
+        })
+        
+        app.post("/sim/sumAndPercent", isLoggedIn, function (req,res) {
+            var total = 0;
+            var cur = 0;
+            Stock.find({}, function (err, docs) {
+                async.eachSeries(docs, function (doc, done) {
+                    console.log(cur)
+                    console.log(total);
+                    cur++;
+                    total+= parseFloat(doc.SIM_Qty_Sold);
+                    async.setImmediate(done);
+                }, function () {
+
+                    async.eachSeries(docs, function (docT, doneT) {
+                        docT.SIM_Qty_Perc = (docT.SIM_Qty_Sold / total) * 100;
+                        docT.save(function (err) {
+                            if(err){
+                                console.log(err)
+                            }
+                            async.setImmediate(doneT);
+                        })
+                    }, function () {
+                        console.log("TOTAL: " + total);
+                        res.send({total:total})
+                    })
+
+
+
+                })
+            })
+
+        })
+        
+
+
+    }
 
 
 
@@ -659,6 +827,5 @@
 
 // Run App
 
-	app.listen(port, function(){
-		console.log('Server Listening on port ' + port)
-	});
+	server.listen(port || 8080);
+	console.log("Running on port " + port)

@@ -21,7 +21,9 @@ var stockSchema = mongoose.Schema({
         height  :   Number, // in mm
         depth   :   Number  // in mm
     },
-    complete    :   {type:  Boolean, default    : true}
+    complete    :   {type:  Boolean, default    : true},
+    SIM_Qty_Sold:   Number,  // TEMPORARY! TODO: REMOVE ME!!!
+    SIM_Qty_Perc:   Number
 },{
     usePushEach : true
 });
