@@ -43,7 +43,18 @@ var userSchema = mongoose.Schema({
     },
     currentSale :   String,
     previousSales   :   [String],
-    userType: String,
+    userType: {
+        type    :   String,
+        enum    :   [
+            "root",
+            "till",
+            "till+",
+            "super",
+            "mngr",
+            "range",
+            "ho"
+        ]
+    },
     userTypePretty: String
 });
 

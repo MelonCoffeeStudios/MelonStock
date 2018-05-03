@@ -37,8 +37,7 @@ depSchema.statics.addSubDep = function(depNum, subDepName, subDepNum, cb){
             }else {
                 cb({err:true,errMsg:err})
             }
-
-        })
+        });
 };
 
 

@@ -1,6 +1,7 @@
 $(function(){
 	$('.profileSave').click(function(){
-		$temp = $('[name=' + $(this).attr('fieldType') + ']');
+        console.log("Her");
+        $temp = $('[name=' + $(this).attr('fieldType') + ']');
 		// console.log($temp)
 		$temp.removeClass('slideSuccess slideFailure');
 

@@ -1,8 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>
+    // Variables to include
+    var USER_STORE_NUMBER = <%= (user.info.store?user.info.store:null) %>;
+    var USER_ID = '<%= user._id %>';
+</script>
+
 <head>
     <% include ./part/head %>
 </head>
+
+
+
 <body class="container">
 <div class="notifications">
 

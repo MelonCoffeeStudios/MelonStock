@@ -1,6 +1,6 @@
 <% include fullHead.ejs %>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+
 <script src="/static/js/plotly.js"></script>
 
 <main>
@@ -19,10 +19,15 @@
         </div>
         <div class="col-md-5">
             <div class="row" name="controls" style="height: 10vh;">
-                <button name="runSim">Run Simulation! (No Save)</button>
+                <button name="runSim">Run Simulation! (Save)</button>
                 <button name="sumAndPercent">Sum and Percent Stocks</button>
+                <button name="displayDeps">Display Department Sales</button>
+                <button name="getBarcodeSales">Get Barcode Sales</button>
             </div>
             <div class="row" style="max-height: 60vh;overflow-y: scroll">
+                <div>
+                    Current Date: <span name="simTimeLog">N/A</span>
+                </div>
                 <table class="table table-striped table-condensed" >
                     <thead>
                     <th>Time</th>
@@ -66,6 +71,33 @@
         $.post("/sim/sumAndPercent").done(function (data) {
             console.log(data);
         })
+    })
+
+    $("[name=displayDeps]").click(function () {
+        var Sales = [];
+        $.get("/sim/allSales", function (AllSales) {
+            AllSales.forEach(function (Sale) {
+                Sale.items.forEach(function (item){
+                    Sales[item.dep].push(item)
+                })
+            })
+            console.log(Sales);
+        })
+    })
+
+    $("[name=getBarcodeSales]").click(function () {
+        var bc = prompt("Which Barcode?");
+        $.post("/sim/salesPerBarcode", {barcode: bc},function (data) {
+            console.log(data);
+        })
+    })
+
+    socket.on("simTimeLog", function (data) {
+        var bar = $("[name=simTimeLog]");
+        var str = data.simDate + ", " + FormatNumberLength(data.simTime,2) + ":00"
+        console.log(data);
+
+        bar.text(str)
     })
 
     socket.on("hourSim", function (data) {

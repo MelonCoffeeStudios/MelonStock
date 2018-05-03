@@ -20,6 +20,8 @@ var saleSchema = mongoose.Schema({
         sku         :   Number,
         barcode     :   Number,
         price       :   Number,
+        dep         :   Number,
+        subDep      :   Number,
         newPrice    :   Number,
         reduced     :   {
             type    :   Boolean,
@@ -87,21 +89,13 @@ saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
                     cb(err?{err:true,errMsg:err}:null,doc);
                 })
             }else{
+                doc.status = "INCOMPLETE";
                 doc.items.push({
                     title       :   newItem.shortTitle,
                     sku         :   newItem.sku,
                     price   :   newItem.price,
                     barcode     :   scannedBarcode,
-                    // newPrice    :   Number,
-                    // reduced     :   {
-                    //     type    :   Boolean,
-                    //     default :   false
-                    // },
                     qty         :   1
-                    // voided      :   {
-                    //     type    :   Boolean,
-                    //     default :   false
-                    // }
                 });
                 doc.save(function (err) {
                     cb(err?{err:true,errMsg:err}:null,doc);
@@ -109,8 +103,6 @@ saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
             }
         }
     })
-
-    // cb(null, doc)
 };
 
 saleSchema.statics.subTotal = function (body, cb) {

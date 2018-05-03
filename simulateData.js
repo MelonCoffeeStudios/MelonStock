@@ -3,6 +3,7 @@ var fs = require('fs');
 var LBL = require("line-by-line");
 var async = require('async');
 var Sale = require("./models/sale")
+var Promise = require("bluebird");
 
 
 
@@ -53,7 +54,7 @@ class SimulateData {
             0.281775815,0.306087496,0.314717189,0.318135276,0.313574784,0.317640047,0.317112628,0.306113361,0.313042044,
             0.295027307,0.334286046,0.316653751,0.323650308,0.343199859,0.335852758,0.335400647,0.335934975,0.314641324,
             0.314407947,0.302475861,0.334454528,0.307818215,0.311739605,0.321695998,0.308379044]; // TODO: SORT THIS OUT
-        this.StartDate = new Date("January 1, 2017 00:00:00");
+        this.StartDate = new Date("January 1, 2016 00:00:00");
         this.CurrentDate = {
             date:this.StartDate,
             num:0,
@@ -104,8 +105,12 @@ class SimulateData {
         self.initSalesData("./CSV/PercentSaleByDay.csv", function () {
 
             Stock.find({},function (err, docs) {
+                var dayArray = [];
+                for(var i = 0; i < self.days; i++){
+                    dayArray.push(i)
+                }
                 console.log("Running!");
-                for (let day = 0; day < self.days; day++) {
+                async.eachSeries(dayArray, function (day, done) {
                     let d = new Date(self.StartDate)
                     d.setDate(d.getDate() + day);
                     self.CurrentDate.num = day;
@@ -116,16 +121,14 @@ class SimulateData {
                         time: n.getHours() + ":" + n.getMinutes(),
                         error: false
                     };
-
                     self.io.sockets.in("sim-logs").emit("newLine", m)
-                    // self.sendToSockets("newLine", m, function () {
-                    self.performDay(docs)
                     console.log(day)
-                    // })
-
-
-                }
-                cb(self.dailySalesPercent);
+                    self.performDay(docs, function () {
+                        done();
+                    })
+                }, function (err) {
+                    cb(self.dailySalesPercent);
+                })
             });
         })
 
@@ -134,7 +137,7 @@ class SimulateData {
 
     };
 
-    performDay(docs){
+    performDay(docs, done){
         var TimeBefore = new Date().getTime();
         var self = this;
         // var item = this.PickStockItem(docs)
@@ -163,12 +166,30 @@ class SimulateData {
         var tot = 0;
 
         var DayBaskets = []
-
+        var DayBasketsModels = []
+        var hoursArray = []
         for(let hour = 0; hour < 24;hour++){
+            hoursArray.push(hour);
+        }
+
+        async.eachSeries(hoursArray, function (hour, hourFin) {
+
+
+            var m = {
+                simTime:self.CurrentDate.hour,
+                simDate:self.CurrentDate.date.toISOString().slice(0, 10),
+                maxDay:self.days,
+                curDay:self.CurrentDate.num
+            }
+
+
+
+
+
             var CONSTANT_HOUR_MULTIPLIER = self.dayPattern[hour];
             var BasketsPerHour = Math.round(TodaysBaskets * (CONSTANT_HOUR_MULTIPLIER/100));
             tot+= BasketsPerHour;
-            this.CurrentDate.hour = hour;
+            self.CurrentDate.hour = hour;
             var hourSimMessage = {
                 message:"Simulating Hour " + self.FormatNumberLength(hour,2)+":00.<br>" +
                     "Total Baskets: " + BasketsPerHour+"/"+TodaysBaskets,
@@ -179,70 +200,130 @@ class SimulateData {
             }
             // self.io.sockets.in("sim-logs").emit("hourSim",hourSimMessage);
 
-            this.PerformHour(BasketsPerHour, 1, 6, docs, function (data) {
+            self.PerformHour(BasketsPerHour, 1, 6, docs, function (data, models) {
+                self.io.sockets.in("sim-logs").emit("simTimeLog", m);
                 DayBaskets[hour] = data;
+                async.eachSeries(models,function (mod, modFin) {
+                    DayBasketsModels.push(mod);
+                    modFin();
+                }, function (err) {
+                    hourFin();
+                })
             })
-        }
-        var BasketMessage = {
-            message: "Basket for Day",
-            dayBaskets: DayBaskets,
-            totalBaskets:   TodaysBaskets,
-            date:   this.CurrentDate.date.toISOString().slice(0,10)
-        }
-        setTimeout(function () {
+
+
+        }, function (err) {// AFTER 24 HOUR SIM
+
+
+            var BasketMessage = {
+                message: "Basket for Day",
+                dayBaskets: DayBaskets,
+                totalBaskets:   TodaysBaskets,
+                date:   self.CurrentDate.date.toISOString().slice(0,10)
+            }
+
             self.io.sockets.in("sim-logs").emit("daySim", BasketMessage)
-        },100)
-
-        console.log("Performed: " + tot + ", Total: " + TodaysBaskets);
 
 
-        var TimeAfter = new Date().getTime();
-        var TimePerSim = TimeAfter - TimeBefore;
-        var ElapsedTime = TimePerSim / 1000;
+            console.log("Performed: " + tot + ", Total: " + TodaysBaskets);
 
-        var eta = ((self.days - self.CurrentDate.num) * ElapsedTime) - ElapsedTime;
-        console.log("Elapsed Time: " + ElapsedTime+"s. ETA: " + eta +"s")
+            async.eachSeries(DayBasketsModels, function (bask, fin) {
+                // console.log("Saving")
+                bask.save(function (err) {
+                    fin();
+                })
+            }, function (err){
+
+                var TimeAfter = new Date().getTime();
+                var TimePerSim = TimeAfter - TimeBefore;
+                var ElapsedTime = TimePerSim / 1000;
+
+                var eta = ((self.days - self.CurrentDate.num) * ElapsedTime) - ElapsedTime;
+                console.log("Elapsed Time: " + ElapsedTime+"s. ETA: " + eta +"s")
+
+                done();
+            })
+
+        })
+        
+
+        
+    }
+
+    emitAsync(type, message){
+        var self = this;
+        return new Promise(function (resolve, reject) {
+            var x = self.io.sockets.in("sim-logs").emit(type,message);
+            var x = self.io.sockets.in("sim-logs").emit(type,message);
+
+            resolve();
+        })
     }
 
     PerformHour(Baskets, MinPerBasket, MaxPerBasket, docs, cb){
+        var self = this;
         var BasketContents = [];
-        for(var basket = 0; basket < Baskets; basket++){    // ITERATE EACH BASKET
-            var BasketQuantity = this.getRandomInt(MinPerBasket, MaxPerBasket);
-            var randMinute = this.getRandomIntInclusive(0,59);
+        var BasketsModels = []
+        var BasketsArr = []
+        for(var basket = 0; basket < Baskets; basket++) {    // ITERATE EACH BASKET
+            BasketsArr.push(basket)
+        }
+        async.eachSeries(BasketsArr, function (basket, BasketsFin) {
+            var BasketQuantity = self.getRandomInt(MinPerBasket, MaxPerBasket);
+            var randMinute = self.getRandomIntInclusive(0,59);
 
             var B = {
-                date    :this.CurrentDate.date,
-                time    :this.FormatNumberLength(this.CurrentDate.hour,2) + ":" + this.FormatNumberLength(randMinute,2),
+                date    :self.CurrentDate.date,
+                time    :self.FormatNumberLength(self.CurrentDate.hour,2) + ":" + self.FormatNumberLength(randMinute,2),
                 minute  : randMinute,
                 items   :[]
             }
-            var d = B.date.setHours(this.CurrentDate.hour, randMinute);
+            var d = B.date.setHours(self.CurrentDate.hour, randMinute);
             var sale = new Sale({
                 dateOpen: d,
                 dateCompleted:d,
                 status: "COMPLETE"
             });
             for(var item = 0; item < BasketQuantity; item++) {
-                var I = this.PickStockItem(docs)
+                var I = self.PickStockItem(docs)
                 sale.items.push({
                     title       :   I.fullTitle,
                     sku         :   I.sku,
                     barcode     :   I.barcode[0],
-                    price       :   I.price
+                    price       :   I.price,
+                    dep         :   I.dep,
+                    subDep      :   I.subDep
                 })
 
                 B.items.push(I)
             }
-            sale.save(function (err) {
-                if(err){
-                    console.log(err)
-                }
-            })
+            BasketsModels.push(sale);
             BasketContents.push(B);
+            var m = {
+                simTime:self.CurrentDate.hour,
+                simDate:self.CurrentDate.date.toISOString().slice(0, 10),
+                maxDay:self.days,
+                curDay:self.CurrentDate.num
+            }
+            // self.emitAsync("simTimeLog", m).then(function () {
+                BasketsFin();
+            // })
 
-        }
-        BasketContents.sort(this.compareMinutes)
-        cb(BasketContents);
+        }, function () {
+
+            var m = {
+                simTime:self.CurrentDate.hour,
+                simDate:self.CurrentDate.date.toISOString().slice(0, 10),
+                maxDay:self.days,
+                curDay:self.CurrentDate.num
+            }
+            // self.emitAsync("simTimeLog", m).then(function () {
+                BasketContents.sort(self.compareMinutes)
+                cb(BasketContents, BasketsModels);
+            // })
+
+        })
+
     }
 
     compareMinutes(a,b) {

@@ -56,10 +56,43 @@
 	app.use(passport.session()); // persistent login sessions
 	app.use(flash()); // use connect-flash for flash messages stored in session
 
-    io.on("connection", function (client) {
-        client.on("join", function (room) {
-            client.join(room)
+    var printUsers = function () {
+        Object.keys(ACTIVE_USERS).forEach(function (user) {
+            var U = ACTIVE_USERS[user];
+            console.log("ACTIVE USERS:\n\tUSER:\n" +
+                "\t\tSocketID: " + U.socket.id + "\n" +
+                "\t\t"(typeof U._id == "undefined"?))
+            if(typeof ACTIVE_USERS[user]._id == "undefined"){
+                console.log("USER:\n\tSocketID: " + ACTIVE_USERS[user].socket.id + "\n\tNOT AUTHENTICATED\n")
+            }else{
+                console.log("USER\n\tSocket ID: " + ACTIVE_USERS[user].socket.id + "\n\tUserID: " + ACTIVE_USERS[user]._id + "\n");
+            }
         })
+    }
+
+    var ACTIVE_USERS = {};
+
+    io.on("connection", function (client) {
+        client.emit("authNow");
+        ACTIVE_USERS[client.id] = {socket:client};
+
+        client.on("joinStore", function (room) {
+            client.join(room)
+            ACTIVE_USERS[client.id].store = room;
+            printUsers()
+        })
+
+        client.on("setID", function (_id) {
+            ACTIVE_USERS[client.id]._id = _id;
+            ACTIVE_USERS[client.id].socket.emit("AuthSuccess")
+            printUsers()
+        })
+
+        client.on("disconnect", function () {
+            delete ACTIVE_USERS[client.id];
+            printUsers()
+        })
+        printUsers()
     })
 
 
@@ -157,6 +190,16 @@
 				});
 				res.status(200).send();
 				break;
+
+            case 'store' :
+                req.user.info.store = req.body.data;
+                req.user.save(function(err){
+                    if(err){
+                        res.status(500).send();
+                    }
+                });
+                res.status(200).send();
+                break;
 		}
 	});
 
@@ -698,52 +741,72 @@
             s.run(function (result) {
                 // res.send(result);
             });
-
-
-
-
         })
-        
-        app.post("/sim/sumAndPercent", isLoggedIn, function (req,res) {
-            var total = 0;
+
+        app.get("/sim/allDeps", isLoggedIn, function (req, res) {
+            Department.find({}, function (err, docs) {
+                res.send(docs);
+            })
+        })
+
+        app.post("/sim/getDepStocks", isLoggedIn, function (req, res) {
+            if(req.body.subDep){
+                Sale.find({items: {dep:req.body.dep, subDep:req.body.subDep}}, function (err, docs) {
+                    if(err){console.log(err)}
+                    res.send(docs);
+                })
+            }else{
+                Sale.find({items: {$elemMatch: {dep:req.body.dep}}}, function (err, docs) {
+                    if(err){console.log(err)}
+                    res.send(docs);
+                })
+            }
+        })
+
+        app.get("/sim/allSales", isLoggedIn, function (req, res) {
+            Sale.find({}, function (err, docs) {
+                if(err){
+                    console.log(err);
+                }
+                console.log(docs.length);
+            })
+        })
+
+        app.post("/sim/salesPerBarcode", isLoggedIn, function (req, res) {
+           var bc = req.body.barcode;
+           Sale.collection.find({"items.barcode": parseInt(bc)}, function (err, cursor) {
+               cursor.toArray(function (err, docs) {
+                   console.log(docs.length);
+                   res.send(`Total docs: ${docs.length}`);
+               })
+           })
+        })
+
+        app.post("/sim/sumAndPercent", isLoggedIn, function (req,res) {     // When user POST requests this URL
+            var total = 0;  // Total
             var cur = 0;
-            Stock.find({}, function (err, docs) {
-                async.eachSeries(docs, function (doc, done) {
-                    console.log(cur)
-                    console.log(total);
+            Stock.find({}, function (err, docs) {   // Get Stock Items as array
+                async.eachSeries(docs, function (doc, done) {   // Ensure function performs synchronously
                     cur++;
-                    total+= parseFloat(doc.SIM_Qty_Sold);
-                    async.setImmediate(done);
-                }, function () {
-
-                    async.eachSeries(docs, function (docT, doneT) {
-                        docT.SIM_Qty_Perc = (docT.SIM_Qty_Sold / total) * 100;
-                        docT.save(function (err) {
-                            if(err){
-                                console.log(err)
-                            }
-                            async.setImmediate(doneT);
+                    total+= parseFloat(doc.SIM_Qty_Sold);   // SIM simply means simulation
+                    async.setImmediate(done);    // Move onto next iteration
+                }, function () {        // Once Fully Iterated do this:
+                    async.eachSeries(docs, function (docT, doneT) { // Another sync forEach
+                        docT.SIM_Qty_Perc = (docT.SIM_Qty_Sold / total) * 100;  // Work out percentage for item
+                        docT.save(function (err) {  // Save item back to DB, then:
+                            if(err){console.log(err)}
+                            async.setImmediate(doneT);  // Move on to next Iteration
                         })
-                    }, function () {
+                    }, function () {    // Once fully Iterated, do this:
                         console.log("TOTAL: " + total);
-                        res.send({total:total})
+                        res.send({total:total}) // Send the total back to user
                     })
-
-
-
                 })
             })
-
         })
-        
 
 
     }
-
-
-
-
-
 
 
 
@@ -796,11 +859,9 @@
 // ============ FUNCTIONS ==============
 // =====================================
 	function isLoggedIn(req, res, next) {
-
 	    // if user is authenticated in the session, carry on 
 	    if (req.isAuthenticated())
 	        return next();
-
 	    // if they aren't redirect them to the home page
 	    if(req.method === "GET"){
 	    	res.redirect('/login');
