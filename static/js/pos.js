@@ -87,10 +87,12 @@ function scan(barcode, cb) {
                     cb();
                 } else {
                     notify("Error!", "Item not found!");
+                    $input.val("");
                     cb();
                 }
             }else {
                 console.log(res);
+                $input.val("");
                 notify("Error", (JSON.stringify(res.errMsg)));
             }
         })
@@ -101,19 +103,21 @@ function updateScanned() {
     var str = "";
     var total = 0.00;
     var items = sale.items;
-    items.forEach(function (item, index, blah) {
-        total += (parseFloat(item.price).toFixed(2) * parseFloat(item.qty).toFixed(2));
-        str +=  "<tr name='scannedItem' sku='" + item.sku + "' onclick='select(this)' barcode='"+item.barcode + "'>" +
-            "<td>" + parseInt(index+1) + "</td>\n" +
-            "<td>" + item.title +"</td>\n" +
-            "<td>x" + item.qty + "</td>\n" +
-            "<td>" + item.price.toFixed(2) + "</td>\n" +
-            "<td>" + (item.price * item.qty).toFixed(2) + "</td>\n" +
-            "</tr>"
+    if(typeof items != "undefined") {
+        items.forEach(function (item, index, blah) {
+            total += (parseFloat(item.price).toFixed(2) * parseFloat(item.qty).toFixed(2));
+            str += "<tr name='scannedItem' sku='" + item.sku + "' onclick='select(this)' barcode='" + item.barcode + "'>" +
+                "<td>" + parseInt(index + 1) + "</td>\n" +
+                "<td>" + item.title + "</td>\n" +
+                "<td>x" + item.qty + "</td>\n" +
+                "<td>" + item.price.toFixed(2) + "</td>\n" +
+                "<td>" + (item.price * item.qty).toFixed(2) + "</td>\n" +
+                "</tr>"
 
-    });
-    $total.html("&pound;" + total.toFixed(2));
-    $scanned.html(str);
+        });
+        $total.html("&pound;" + total.toFixed(2));
+        $scanned.html(str);
+    }
 }
 
 function select(self) {

@@ -62,8 +62,38 @@ class SimulateData {
         };
         this.dailySalesPercent = [];
 
-        console.log("New Data Sim: " + this.Name);
+        this.linear = {
+            A : 1.1,
+            B : 10,
+            YOffset : 100,
+            D : 0.00012,
+            E : 29.6,
+            PHASE : 35,
+            mult : 10,
+            round : true,
+            noise : true,
+            noiseMult: 10
+        }
+
+
+
+                                console.log("New Data Sim: " + this.Name);
     };
+
+    setOptions(A,B,YOffset,D,E,PHASE,mult,round,noise,noiseMult){
+        this.linear = {
+            A : Number.parseFloat(A),
+            B : Number.parseFloat(B),
+            YOffset : Number.parseFloat(YOffset),
+            D : Number.parseFloat(D),
+            E : Number.parseFloat(E),
+            PHASE : Number.parseFloat(PHASE),
+            mult :Number.parseFloat( mult),
+            round : (round=='true'?true:false),
+            noise : (noise=='true'?true:false),
+            noiseMult: Number.parseFloat(noiseMult)
+        }
+    }
 
 
     initSalesData(file, cb) {
@@ -93,7 +123,7 @@ class SimulateData {
     sendToSockets(ns, obj, cb){
         var self = this;
         // process.nextTick(function () {
-            self.io.sockets.in("sim-logs").emit(ns, obj)
+        //     self.io.sockets.in("sim-logs").emit(ns, obj)
             cb;
         // })
 
@@ -104,7 +134,7 @@ class SimulateData {
         var docs = null;
         self.initSalesData("./CSV/PercentSaleByDay.csv", function () {
 
-            Stock.find({},function (err, docs) {
+            Stock.find({sku:2640},function (err, docs) { // Buy just Kingsmill white
                 var dayArray = [];
                 for(var i = 0; i < self.days; i++){
                     dayArray.push(i)
@@ -121,9 +151,9 @@ class SimulateData {
                         time: n.getHours() + ":" + n.getMinutes(),
                         error: false
                     };
-                    self.io.sockets.in("sim-logs").emit("newLine", m)
+                    // self.io.sockets.in("sim-logs").emit("newLine", m)
                     console.log(day)
-                    self.performDay(docs, function () {
+                    self.performDayLinear(docs, function () {
                         done();
                     })
                 }, function (err) {
@@ -137,6 +167,59 @@ class SimulateData {
 
     };
 
+    performDayLinear(docs, done){
+        var CONSTANT_DAY_BASKETS_AVG = 200; // AVG baskets per day
+        // var newSale = new Sale()
+        var IT = this.linear;
+        var numBread = this.LinearRegression(
+            this.CurrentDate.num,
+            IT.A,
+            IT.B,
+            IT.YOffset,
+            IT.D,
+            IT.E,
+            IT.PHASE,
+            IT.mult,
+            IT.round,
+            IT.noise,
+            IT.noiseMult);
+
+
+
+        var sale = new Sale({
+            dateOpen: this.CurrentDate.date,
+            dateCompleted:this.CurrentDate.date,
+            status: "COMPLETE"
+        });
+
+        var I = this.PickStockItem(docs)
+        sale.items.push({
+            title       :   I.fullTitle,
+            sku         :   I.sku,
+            barcode     :   I.barcode[0],
+            price       :   I.price,
+            dep         :   I.dep,
+            subDep      :   I.subDep,
+            qty         :   numBread
+        })
+        var n = new Date();
+        var m = {
+            message:"Simulating Day" + this.CurrentDate.date.toISOString().slice(0, 10) + ". Todays Total Baskets: " +
+            numBread + ", TodayNum: " + this.CurrentDate.num,
+            dayNum: this.CurrentDate.num,
+            time: n.getHours() + ":" + n.getMinutes(),
+            dayBaskets: numBread,
+            error: false
+        }
+        // setImmediate(function () {
+        this.io.sockets.in("sim-logs").emit("itemPick",m);
+
+        sale.save(function (err, doc) {
+            done();
+        })
+
+    }
+
     performDay(docs, done){
         var TimeBefore = new Date().getTime();
         var self = this;
@@ -145,7 +228,7 @@ class SimulateData {
 
         var todaySIM = self.CurrentDate.date;
 
-        var CONSTANT_DAY_BASKETS_AVG = 1200; // AVG baskets per day
+        var CONSTANT_DAY_BASKETS_AVG = 200; // AVG baskets per day
         var CONSTANT_DAY_MULTIPLIER = self.yearPattern[this.CurrentDate.num]
 
         var TodaysBaskets = Math.round(CONSTANT_DAY_BASKETS_AVG * CONSTANT_DAY_MULTIPLIER);
@@ -350,7 +433,7 @@ class SimulateData {
             i++;
         }
         time = Date.now() - time;
-        console.log(time.toISOString());
+        // console.log(time.toISOString());
         return docs[i];
     }
 
@@ -375,6 +458,22 @@ class SimulateData {
         }
         return r;
     }
+
+    LinearRegression(t, A, B, C, D, e, p, mult, round, noise, noiseMult){
+        var addNoise = 0;
+        if(noise){
+            addNoise = this.getRandomInt(-(C/10), C/10) * noiseMult;
+        }
+        if(round){
+            return Math.ceil((A * Math.cos((t / e) - p) + B * Math.sin((t / e) - p) + C + D * t) * mult) - addNoise;
+        }else {
+            return (A * Math.cos((t / e) - p) + B * Math.sin((t / e) - p) + C + D * t) * mult - addNoise;
+        }
+
+    }
+
+
+
 }
 
 

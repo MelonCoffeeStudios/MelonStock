@@ -2,15 +2,26 @@
 <meta charset="UTF-8">
 <title>MelonStock</title>
 
+<script>
+    // Variables to include
+    var USER_STORE_NUMBER = '<%= ((user.info.store?user.info.store:null)).toString() %>';
+    var USER_ID = '<%= user._id %>';
+</script>
+
+
 <!-- CSS (load bootstrap from a CDN) -->
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script src="/static/js/pos.js"></script>
 <link href="https://fonts.googleapis.com/css?family=Overpass+Mono" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
 <link rel="stylesheet" href="/static/css/pos.css">
 
 <script src="/static/js/notify.js"></script>
 <script src="/static/js/popup.js"></script>
+
+<script src="/static/js/sockets.js"></script>
+
 
 <link rel="stylesheet" href="/static/css/notifications.css">
 <link rel="stylesheet" href="/static/css/popup.css">

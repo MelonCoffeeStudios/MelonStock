@@ -28,7 +28,7 @@ var userSchema = mongoose.Schema({
         password     : String,
         firstName    : String,
         lastName	 : String,
-        store        : Number,
+        store        : String,
         dob          : Date,
         prevStores   : [{
             store    : Number,
