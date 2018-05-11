@@ -1,4 +1,6 @@
-# MelonStock    ![Logo](./images/Melon.png | width=100)
+<img src="./images/Melon.png" alt="drawing" style="width: 100px;height: 100px;"/>
+
+# MelonStock    
 ### My Third Year Project at UEA
 MelonStock is a **smart** Point Of Sale system that is still in development
 
