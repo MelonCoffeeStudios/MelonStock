@@ -115,6 +115,7 @@
                 ACTIVE_USERS[client.id].socket.emit("AuthSuccess")
                 printUsers()
             })
+
         })
 
         client.on("update", function () {
