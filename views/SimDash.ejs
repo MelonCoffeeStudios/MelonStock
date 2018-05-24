@@ -1,29 +1,49 @@
 <% include fullHead.ejs %>
 
 
-<script src="/static/js/plotly.js"></script>
+
 
 <main>
 
-        <div class="col-md-7" >
+        <div class="col-md-9" >
             <div class="row" name="graphs">
                 <div id="tester" style="width:100%;height:40vh;"></div>
             </div>
             <div class="row" name="info" style="max-height: 50vh;overflow-y: scroll">
                 <div class="col-md-8">
                     <div class="panel-group" name="DayPanels">
+                        <div class="outputData">
 
+                        </div>
+                        <input name="AllowOptions" type="checkbox"> Edit Options?
+                        <form name="options">
+                            <input disabled name="A" type="number" value="1.1"> A <br>
+                            <input disabled name="B" type="number" value="10"> B <br>
+                            <input disabled name="YOffset" type="number" value="100"> YOffset <br>
+                            <input disabled name="D" type="number" value="0.00012"> D <br>
+                            <input disabled name="E" type="number" value="29.6"> E <br>
+                            <input disabled name="PHASE" type="number" value="35"> PHASE <br>
+                            <input disabled name="mult" type="number" value="10"> Y-Multiplier <br>
+                            <input disabled name="round" type="checkbox" checked> Round Numbers? <br>
+                            <input disabled name="noise" type="checkbox" checked> Add Noise? <br>
+                            <input disabled name="noiseMult" type="number" value="10"> Noise Multiplier
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-3">
             <div class="row" name="controls" style="height: 10vh;">
                 <button name="runSim">Run Simulation! (Save)</button>
                 <button name="sumAndPercent">Sum and Percent Stocks</button>
                 <button name="displayDeps">Display Department Sales</button>
                 <button name="getBarcodeSales">Get Barcode Sales</button>
+                <button name="getBreadSales">Get Bread Sales</button>
+                <button name="getBreadSalesSmart">Get Bread Sales (Smart)</button>
+                <button name="clearSales">Clear SALES</button>
+
             </div>
+            <br><br><br><br><br><br>
             <div class="row" style="max-height: 60vh;overflow-y: scroll">
                 <div>
                     Current Date: <span name="simTimeLog">N/A</span>
@@ -53,16 +73,42 @@
 
     var socket = io.connect();
 
-    socket.emit("join", "sim-logs")
+    setTimeout(function () {
+        socket.emit("join", "sim-logs")
+    }, 500)
 
     socket.on("connect", function (data) {
         console.log(data);
     });
 
+    function getOptions() {
+        return {
+            A: Number.parseFloat($("[name=A]").val()),
+            B: Number.parseFloat($("[name=B]").val()),
+            YOffset:Number.parseFloat($("[name=YOffset]").val()),
+            D: Number.parseFloat($("[name=D]").val()),
+            E: Number.parseFloat($("[name=E]").val()),
+            PHASE: Number.parseFloat($("[name=PHASE]").val()),
+            mult: Number.parseFloat($("[name=mult]").val()),
+            round: $("[name=round]").is(":checked"),
+            noise: $("[name=noise]").is(":checked"),
+            noiseMult:Number.parseFloat($("[name=noiseMult]").val())
+        }
+    }
+
+
+    $("[name=AllowOptions]").click(function () {
+        $("[name=options]").find("input").attr("disabled", !$("[name=AllowOptions]").is(':checked'));
+        // console.log($("[name=AllowOptions]").is(':checked'))
+    })
+
     $("[name=runSim]").click(function () {
-        plotx=[];
-        ploty=[];
-        $.post("/sim/runSim").done(function (data) {
+        var body = {
+            options: $("[name=AllowOptions]").is(':checked'),
+            ops : getOptions()
+        }
+        resetGraph()
+        $.post("/sim/runSim", body).done(function (data) {
             console.log(data);
         })
     })
@@ -71,6 +117,135 @@
         $.post("/sim/sumAndPercent").done(function (data) {
             console.log(data);
         })
+    })
+
+    $("[name=clearSales]").click(function () {
+        $.post("/sim/clearSales").done(function(data){
+            if(data.err){
+                $("[name=bant]").append("<tr class='danger'>" +
+                    "<td>Clear</td>" +
+                    "<td>Error: " + data.errMsg + "</td>" +
+                    "</tr>");
+            }else{
+                $("[name=bant]").append("<tr class='info'>" +
+                    "<td>Clear</td>" +
+                    "<td>Success</td>" +
+                    "</tr>");
+
+                resetGraph()
+                Plotly.newPlot('tester', [trace1, trace2])
+            }
+        })
+    })
+
+    $("[name=getBreadSales]").click(function () {
+        resetGraph()
+        $.post("/sim/breadSales").done(function (data) {
+            var breadOrdered = 0;
+            var breadSold = 0;
+            var totalWaste = 0;
+            console.log(data);
+            data.dailySales.forEach(function (day, index, fullYEAR) {
+                breadSold+= day;
+                plotx.push(index)
+                ploty.push(day)
+
+            })
+            data.dailyPredicts.forEach(function (day, index, fullYEAR) {
+                plotxOrder.push(index)
+                plotyOrder.push(day)
+                breadOrdered+= day;
+            })
+
+            var avgOne = 0;
+            plotyOrder.forEach(function (p, i, full) {
+                avgOne+= (p - ploty[i])
+                if(p>ploty[i]){
+                    totalWaste += (p - ploty[i])
+                }
+            })
+            avgOne/=ploty.length;
+
+            avgOne = avgOne.toFixed(2);
+            console.log(breadOrdered);
+            console.log(totalWaste);
+            var wastePercent = (totalWaste/breadOrdered) * 100;
+            var wasteDaily = totalWaste/plotyOrder.length;
+
+            var phrase = (breadOrdered - breadSold >0?"Over-":"Under-");
+
+            $(".outputData").html("" + phrase + "ordered by: "+ (breadOrdered - breadSold) +
+                ", Average Daily: " + avgOne +
+                ", Total Wastage: " + totalWaste +
+                ", Avg Daily Wastage: " + wasteDaily.toFixed(2) +
+                ", Waste % of sales: " + wastePercent.toFixed(2) + "%")
+            $("[name=bant]").append("<tr class='info'>" +
+                "<td>Result</td>" +
+                "<td>"+ phrase + "ordered by: "+ (breadOrdered - breadSold) +"<br>" +
+                "Average Daily: " + avgOne + "<br>" +
+                "Total Wastage: " + totalWaste + "<br>" +
+                "Avg Daily Wastage: " + wasteDaily.toFixed(2) + "</td>" +
+                "</tr>");
+            $(".row").scrollTop(function() { return this.scrollHeight; });
+
+            Plotly.newPlot('tester', [trace1, trace2])
+        })
+    })
+
+    $("[name=getBreadSalesSmart]").click(function () {
+        resetGraph()
+        $.post("/sim/breadSales", {smart:true}).done(function (data) {
+            var breadOrdered = 0;
+            var totalWaste = 0;
+            var breadSold = 0;
+            console.log(data);
+            data.dailySales.forEach(function (day, index, fullYEAR) {
+                breadSold+= day;
+                plotx.push(index)
+                ploty.push(day)
+            })
+            data.dailyPredicts.forEach(function (day, index, fullYEAR) {
+                plotxOrder.push(index)
+                plotyOrder.push(day)
+
+                breadOrdered+= day;
+            })
+
+            var avgOne = 0;
+            plotyOrder.forEach(function (p, i, full) {
+                avgOne+= (p - ploty[i])
+                if(p>ploty[i]){
+                    totalWaste += (p - ploty[i])
+                }
+            })
+            avgOne/=ploty.length;
+
+            avgOne = avgOne.toFixed(2);
+
+            var wasteDaily = totalWaste/plotyOrder.length;
+
+            var wastePercent = (totalWaste / breadOrdered) * 100;
+
+            var phrase = (breadOrdered - breadSold >0?"Over-":"Under-");
+            $(".outputData").html("" + phrase + "ordered by: "+ (breadOrdered - breadSold) +
+                ", Average Daily: " + avgOne +
+                ", Total Wastage: " + totalWaste +
+                ", Avg Daily Wastage: " + wasteDaily.toFixed(2) +
+                ", Waste % of sales: " + wastePercent.toFixed(2) + "%")
+
+            $("[name=bant]").append("<tr class='info'>" +
+                "<td>Result</td>" +
+                "<td>"+ phrase + "ordered by: "+ (breadOrdered - breadSold) +"<br>" +
+                "Average Daily: " + avgOne + "<br>" +
+                "Total Wastage: " + totalWaste + "<br>" +
+                "Avg Daily Wastage: " + wasteDaily.toFixed(2) + "</td>" +
+                "</tr>");
+            $(".row").scrollTop(function() { return this.scrollHeight; });
+
+            Plotly.newPlot('tester', [trace1, trace2])
+        })
+
+
     })
 
     $("[name=displayDeps]").click(function () {
@@ -164,6 +339,8 @@
 
     var plotx = [];
     var ploty = [];
+    var plotxOrder = [];
+    var plotyOrder = [];
 
 
     var trace1 = {
@@ -171,22 +348,64 @@
         x: plotx,
         y: ploty,
         mode: 'lines',
-        name: 'Red',
+        name: 'Sales',
         line: {
             color: 'rgb(219, 64, 82)',
-            width: 3
+            width: 1
         }
     };
 
+    var trace2 = {
+        type: 'scatter',
+        x: plotxOrder,
+        y: plotyOrder,
+        mode: 'lines',
+        name: 'Orders',
+        line: {
+            color: 'rgb(10, 64, 210)',
+            width: 1
+        }
+    }
+
+    function resetGraph() {
+        plotx = []
+        ploty = []
+        plotxOrder = []
+        plotyOrder = []
+        trace1 = {
+            type: 'scatter',
+            x: plotx,
+            y: ploty,
+            mode: 'lines',
+            name: 'Sales',
+            line: {
+                color: 'rgb(219, 64, 82)',
+                width: 1
+            }
+        };
+
+        trace2 = {
+            type: 'scatter',
+            x: plotxOrder,
+            y: plotyOrder,
+            mode: 'lines',
+            name: 'Orders',
+            line: {
+                color: 'rgb(10, 64, 210)',
+                width: 1
+            }
+        }
+    }
+
     var plotDraw = setInterval(function () {
-        Plotly.newPlot('tester', [trace1])
+
     }, 500)
 
     socket.on("itemPick", function (data) {
-        $("[name=bant]").append("<tr class='"+(data.error?"danger":"primary") + "'>" +
-            "<td>"+data.time+"</td>" +
-            "<td>"+data.message+"</td>" +
-            "</tr>");
+        // $("[name=bant]").append("<tr class='"+(data.error?"danger":"primary") + "'>" +
+        //     "<td>"+data.time+"</td>" +
+        //     "<td>"+data.message+"</td>" +
+        //     "</tr>");
 
         plotx.push(data.dayNum);
         ploty.push(data.dayBaskets);
@@ -207,7 +426,7 @@
 
 
 
-
+        Plotly.newPlot('tester', [trace1])
 
         console.log(data)
     })

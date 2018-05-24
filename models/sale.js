@@ -1,6 +1,7 @@
 var mongoose = require("mongoose");
 var mongoosePages = require('mongoose-pages');
 
+
 var saleSchema = mongoose.Schema({
     status      :   {           // ONLY ONE
         type    :   String,
@@ -14,6 +15,7 @@ var saleSchema = mongoose.Schema({
     },
     userID      :   Number,
     userName    :   String,
+    store       :   String,
     tillID      :   Number,
     items       :   [{
         title       :   String,
@@ -76,8 +78,9 @@ var saleSchema = mongoose.Schema({
 mongoosePages.skip(saleSchema);
 
 saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
-    this.findOne({_id:id}, function (err, doc) {
-        if(err){cb(err)}else{
+    this.findById(id, function (err, doc) {
+        console.log(doc);
+        if(err || doc == null){cb("Please reset Sale state!")}else{
             var alreadyScanned = false;
             var scannedIndex = 0;
             doc.items.forEach(function (item, index, huuu) {
@@ -91,7 +94,7 @@ saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
             }else{
                 doc.status = "INCOMPLETE";
                 doc.items.push({
-                    title       :   newItem.shortTitle,
+                    title       :   newItem.shortTitle||newItem.fullTitle,
                     sku         :   newItem.sku,
                     price   :   newItem.price,
                     barcode     :   scannedBarcode,

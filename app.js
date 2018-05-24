@@ -26,7 +26,10 @@
 	var Department = require("./models/department.js");
     var Barcode = require('barcode');
     var SimulateData = require("./simulateData");
-    var io = require("socket.io")(server);
+    var io = require("socket.io")(server, {
+        pingTimeout: 5000,
+        pingInterval:1000
+    });
     var async = require('async');
 
 
@@ -57,39 +60,82 @@
 	app.use(flash()); // use connect-flash for flash messages stored in session
 
     var printUsers = function () {
+        console.log("ACTIVE USERS:")
         Object.keys(ACTIVE_USERS).forEach(function (user) {
             var U = ACTIVE_USERS[user];
-            console.log("ACTIVE USERS:\n\tUSER:\n" +
-                "\t\tSocketID: " + U.socket.id + "\n" +
-                "\t\t"(typeof U._id == "undefined"?))
-            if(typeof ACTIVE_USERS[user]._id == "undefined"){
-                console.log("USER:\n\tSocketID: " + ACTIVE_USERS[user].socket.id + "\n\tNOT AUTHENTICATED\n")
-            }else{
-                console.log("USER\n\tSocket ID: " + ACTIVE_USERS[user].socket.id + "\n\tUserID: " + ACTIVE_USERS[user]._id + "\n");
-            }
+            console.log("\tUSER:\n" +
+                "\t\tSocketID:\t" + U.socket.id + "\n" +
+                "\t\tUserID\t:\t" + (typeof U._id == "undefined"?"NONE":U._id) + "\n" +
+                "\t\tStore\t:\t" + (typeof U.store == "undefined"?"NONE":U.store))
         })
     }
 
+    var getUsersPerStore = function (clientStore) {
+        var temp = {};
+        if(clientStore == 0 || typeof clientStore == "undefined"){
+            return ACTIVE_USERS_SEND;
+        }else {
+            Object.keys(ACTIVE_USERS_SEND).forEach(function (user) {
+                if (ACTIVE_USERS_SEND[user].store == clientStore) {
+                    temp[user] = ACTIVE_USERS_SEND[user];
+                }
+            })
+            return temp;
+        }
+    }
+
     var ACTIVE_USERS = {};
+    var ACTIVE_USERS_SEND = {}
 
     io.on("connection", function (client) {
         client.emit("authNow");
         ACTIVE_USERS[client.id] = {socket:client};
+        ACTIVE_USERS_SEND[client.id] = {};
 
         client.on("joinStore", function (room) {
-            client.join(room)
-            ACTIVE_USERS[client.id].store = room;
-            printUsers()
+            if(ACTIVE_USERS[client.id].user) {
+                if (ACTIVE_USERS[client.id].user.info.store == room) {
+                    client.join(room)
+                    ACTIVE_USERS[client.id].store = String(room);
+                    ACTIVE_USERS_SEND[client.id].store = String(room);
+                    printUsers()
+                    client.broadcast.to(ACTIVE_USERS[client.id].store).emit("activeUsers", JSON.stringify(getUsersPerStore(room)))
+                }
+            }
         })
 
         client.on("setID", function (_id) {
             ACTIVE_USERS[client.id]._id = _id;
-            ACTIVE_USERS[client.id].socket.emit("AuthSuccess")
-            printUsers()
+            ACTIVE_USERS_SEND[client.id]._id = _id;
+            console.log("All Good");
+            User.findById(_id, function (err, doc) {
+                if(err){"Error Retrieving User from Socket _id"}
+                ACTIVE_USERS[client.id].user = doc;
+                ACTIVE_USERS_SEND[client.id].user = doc;
+                ACTIVE_USERS[client.id].socket.emit("AuthSuccess")
+                printUsers()
+            })
         })
 
+        client.on("update", function () {
+
+            var clientStore = ACTIVE_USERS[client.id].store;
+            var temp = getUsersPerStore(clientStore);
+            client.emit("activeUsers", JSON.stringify(temp));
+
+        })
+
+        client.on("join", function (room) {
+            client.join(room )
+        })
+
+
         client.on("disconnect", function () {
+            console.log("User: " + client.id +", disconnected");
+            var store = ACTIVE_USERS_SEND[client.id].store;
             delete ACTIVE_USERS[client.id];
+            delete ACTIVE_USERS_SEND[client.id];
+            client.broadcast.to(store).emit("activeUsers", JSON.stringify(getUsersPerStore(store)))
             printUsers()
         })
         printUsers()
@@ -104,6 +150,24 @@
 			user: req.user
 		})
 	});
+
+    /*
+     * INDEX ROUTES
+     */
+    {
+        app.post('/i/getActiveSales', isLoggedIn, function (req, res) {
+           Sale.find()
+        });
+        
+        
+    }
+
+
+
+
+
+
+
 
 	app.get('/pos', isLoggedIn, function (req, res) {
 	    if(!req.user.currentSale){
@@ -213,6 +277,63 @@
             })
         }
     });
+// User.find({}, function (err, UserList) {
+//     UserList.forEach(function (U) {
+//         var sale = new Sale();
+//         U.currentSale = sale._id;
+//         sale.save(function (err) {
+//             if (err) {
+//                 console.log(err);
+//             }
+//             else {
+//                 U.save(function (err) {
+//                     if (err) {
+//                         console.log(err);
+//                     }
+//                 })
+//             }
+//         })
+//     })
+// });
+	/*
+	 *  ADMIN ROUTES
+	 */
+    {
+        app.post("/admin/resetUserSales", isLoggedIn, function (req, res) {
+            User.find({}, function (err, UserList) {
+                if(err){
+                    res.send({err:true, errMsg:err});
+                }else if(UserList.length == 0){
+                    res.send({err:true, errMsg:"No Users found"})
+                }else{
+                    if(req.user.userType== "root"){
+                        UserList.forEach(function (U) {
+                            var sale = new Sale();
+                            U.currentSale = sale._id;
+                            sale.save(function (err) {
+                                if(err){
+                                    console.log(err);}
+                                    else{
+                                    U.save(function (err) {
+                                        if(err){
+                                            console.log(err);
+                                        }
+                                    })
+                                }
+                            })
+                        })
+                        res.send("Ayyy")
+                        
+                        
+                        
+                    }else{
+                        res.send({err:true, errMsg:"Insufficient Authorisation"})
+                    }
+                }
+            })
+        })
+    }
+	
 
 	app.post('/pdfExtract', isLoggedIn, function(req, res) {
 		if (!req.files)
@@ -455,8 +576,11 @@
 
     app.post("/stock/barcode/:barcode", isLoggedIn, function (req, res) {
         Stock.findOne({barcode:req.params.barcode}, function (err, doc) {
+            console.log(doc);
             if(err){
                 res.send({err:true,errMsg:err});
+            }else if(doc == null){
+                res.send({err:true, errMsg:"Stock not found"})
             }else{
                 Sale.addItem(req.user.currentSale, doc, req.params.barcode, function (err, sale) {
                     res.send(err?{err:true, errMsg: err}:sale);
@@ -465,6 +589,7 @@
         })
     });
 
+
     app.post("/stock/add", isLoggedIn, function (req, res) {
         if(req.user.userType === "range" || req.user.userType === "ho" || req.user.userType === "root"){
             console.log(req.body);
@@ -472,7 +597,7 @@
                 Stock.findById(req.body._id, function (err, stock) {
                     stock.empty = false;
                     stock.supplier = req.body.supplier;
-                    stock.barcode.push(req.body.barcode);
+                    stock.barcode= (req.body.barcode);
                     stock.shortTitle = req.body.shortTitle;
                     stock.fullTitle = req.body.fullTitle;
                     stock.price =  req.body.price;
@@ -722,6 +847,18 @@
     });
 
 
+ var simOptions = {
+     A : 1.1,
+     B : 10,
+     YOffset : 100,
+     D : 0.00012,
+     E : 29.6,
+     PHASE : 35,
+     mult : 10,
+     round : true,
+     noise : false,
+     noiseMult: 10
+ };
 
 
 
@@ -737,6 +874,24 @@
         app.post("/sim/runSim", isLoggedIn, function (req, res) {
             var dayPattern = [0.5367,0.3111,0.1974,0.0884,0.0018,0.0001,0.0015,0.3025,2.0201,2.6901,4.7209,6.8918,10.4405,10.7798,8.2832,8.6083,8.7329,9.2582,7.4610,5.6966,4.7835,4.1838,3.2093,0.8006];
             var s = new SimulateData("HI",365, dayPattern, io);
+
+            // console.log(req.body);
+            if(JSON.parse(req.body.options) == true){
+                console.log("Options: true");
+                var options = req.body.ops;
+                s.setOptions(options.A,
+                    options.B,
+                    options.YOffset,
+                    options.D,
+                    options.E,
+                    options.PHASE,
+                    options.mult,
+                    options.round,
+                    options.noise,
+                    options.noiseMult)
+            }
+            simOptions=s.linear;
+            // console.log(s.linear)
             res.send(200);
             s.run(function (result) {
                 // res.send(result);
@@ -805,7 +960,123 @@
             })
         })
 
+        app.post("/sim/breadSales", isLoggedIn, function (req, res) {
+            var dailySales  = new Array(365).fill(0);
+            var dailyPredicts = [];
+            var timeNow = Date.now();
+            var pageNo = 1000;
 
+            Sale.find({}, function (err, docs) {
+                // console.log(docs.length);
+                docs.forEach(function (sale) {
+                    sale.items.forEach(function (item) {
+                        dailySales[sale.dateCompleted.getDOY()-1]+=item.qty;
+                    })
+                })
+                var timeAfter = Date.now();
+                console.log("Query took: " + (timeAfter.valueOf() - timeNow.valueOf()) + "(ms)")
+
+                // for(var i = 0; i < dailySales.length; i++){
+                //     dailyPredicts[i] = orderPredictOneWeek(i, dailySales)
+                //     console.log(dailyPredicts[i]);
+                // }
+                if(!req.body.smart) {
+                    predictYear(dailySales, function (p) {
+                        res.send({
+                            dailySales: dailySales,
+                            dailyPredicts: p
+                        });
+                    })
+                }else{
+                    predictYearSmart(dailySales, function (p) {
+                        res.send({
+                            dailySales: dailySales,
+                            dailyPredicts: p
+                        });
+                    })
+                }
+
+            })
+        })
+
+        app.post("/sim/predictOneWeek/:dayNum", isLoggedIn, function (req,res) {
+
+        })
+        
+        app.post("/sim/clearSales", isLoggedIn, function (req, res) {
+            Sale.remove({}, function (err) {
+                res.send((err?{err:true, errMsg:err}:{err:false}));
+            })
+        })
+
+
+    }
+
+    function predictYear(dailySales, cb) {
+        var dailyPredicts = [];
+        for(var i = 0; i < dailySales.length; i++){
+            dailyPredicts[i] = orderPredictOneWeek(i, dailySales)
+            // console.log(dailyPredicts[i]);
+        }
+        cb(dailyPredicts);
+    }
+    
+    function predictYearSmart(dailySales, cb) {
+        var dailyPredicts = [];
+        for(var i = 0; i < dailySales.length; i++){
+            dailyPredicts[i] = LinearRegression(i, simOptions.A, simOptions.B, simOptions.YOffset,
+                simOptions.D, simOptions.E, simOptions.PHASE, simOptions.mult, simOptions.round,
+                simOptions.noise, simOptions.noiseMult);
+            console.log(dailyPredicts[i]);
+            // console.log(dailyPredicts[i]);
+        }
+        cb(dailyPredicts);
+    }
+
+    function LinearRegression(t, A, B, C, D, e, p, mult, round, noise, noiseMult){
+        var addNoise = 0;
+        if(noise){
+            addNoise = getRandomInt(-(C/10), C/10) * noiseMult;
+        }
+        if(round){
+            return Math.ceil((A * Math.cos((t / e) - p) + B * Math.sin((t / e) - p) + C + D * t) * mult) - addNoise;
+        }else {
+            return (A * Math.cos((t / e) - p) + B * Math.sin((t / e) - p) + C + D * t) * mult - addNoise;
+        }
+
+    }
+
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+    }
+
+    function orderPredictOneWeek(dayNum, dailySales, cb) {
+        var avg = 0;
+        if(dayNum - 7 < 0){
+            for(var i = 1; i <= 7; i ++){
+                if(Math.sign(dayNum-i) == -1){
+                    avg += dailySales[365 - dayNum];
+                }else {
+                    avg += dailySales[dayNum - i];
+                }
+            }
+        }else if(dayNum + 7 > 365){
+            for(var i = 1; i <= 7; i ++){
+                if(dayNum+i > 365){
+                    avg += dailySales[(dayNum+i) - 365];
+                }else {
+                    avg += dailySales[dayNum - i];
+                }
+            }
+        }else{
+            for(var i = 1; i <= 7; i ++){
+                avg += dailySales[dayNum-i];
+            }
+        }
+        return Math.ceil(avg/7);
+        // })
     }
 
 
@@ -883,6 +1154,22 @@
 		}
 
     }
+
+    Date.prototype.isLeapYear = function() {
+        var year = this.getFullYear();
+        if((year & 3) != 0) return false;
+        return ((year % 100) != 0 || (year % 400) == 0);
+    };
+
+    // Get Day of Year
+    Date.prototype.getDOY = function() {
+        var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+        var mn = this.getMonth();
+        var dn = this.getDate();
+        var dayOfYear = dayCount[mn] + dn;
+        if(mn > 1 && this.isLeapYear()) dayOfYear++;
+        return dayOfYear;
+    };
 
 
 

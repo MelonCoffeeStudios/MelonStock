@@ -2,7 +2,7 @@
 <html lang="en">
 <script>
     // Variables to include
-    var USER_STORE_NUMBER = <%= (user.info.store?user.info.store:null) %>;
+    var USER_STORE_NUMBER = '<%= ((user.info.store?user.info.store:null)).toString() %>';
     var USER_ID = '<%= user._id %>';
 </script>
 
