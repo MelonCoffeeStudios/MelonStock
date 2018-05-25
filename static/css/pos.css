@@ -7,6 +7,10 @@ main {
     height: 90vh;
 }
 
+.hidden{
+    display: none;
+}
+
 
 .pos-left {
     position: absolute;

@@ -7,6 +7,7 @@ var saleSchema = mongoose.Schema({
         type    :   String,
         enum    :   [
             "COMPLETE",
+            "CHANGE",
             "INCOMPLETE",
             "VOID",
             "EMPTY"
@@ -77,6 +78,39 @@ var saleSchema = mongoose.Schema({
 });
 mongoosePages.skip(saleSchema);
 
+saleSchema.statics.addCash = function (user, cash, cb) {
+    this.findById(user.currentSale, function (err, doc) {
+        if(doc.status = "CHANGE"){
+            var Sale = mongoose.model("Sale", saleSchema)
+            var x = new Sale();
+            x.save(function () {
+                user.currentSale = x._id
+                user.save(function () {
+                    cb()
+                })
+            })
+        }
+
+        doc.payment.method = "CASH";
+        if(typeof doc.payment.amountPaidCash == "undefined"){
+            doc.payment.amountPaidCash = 0;
+        }
+        var x = doc.payment.amountPaidCash;
+        doc.payment.amountPaidCash = Number.parseFloat(x) + Number.parseFloat(cash);
+        // console.log(doc);
+        if(doc.subTotal - doc.payment.amountPaidCash <= 0){
+            doc.status = "CHANGE";
+            doc.payment.changeRequired = doc.subTotal - doc.payment.amountPaidCash;
+            doc.payment.paymentReceived = Date.now();
+            doc.dateCompleted = Date.now();
+        }
+        doc.save(function (err) {
+            cb(err?{err:true,errMsg:err}:null,doc);
+        })
+    })
+
+}
+
 saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
     this.findById(id, function (err, doc) {
         console.log(doc);
@@ -87,7 +121,12 @@ saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
                 if(item.sku === newItem.sku){alreadyScanned=true;scannedIndex=index;}
             });
             if(alreadyScanned){
+                doc.subTotal = 0;
                 doc.items[scannedIndex].qty++;
+                doc.items.forEach(function (i) {
+                    console.log(Number.parseFloat(i.price.toFixed(2) * i.qty.toFixed(2)));
+                    doc.subTotal+= Number.parseFloat(i.price.toFixed(2) * i.qty.toFixed(2));
+                })
                 doc.save(function (err) {
                     cb(err?{err:true,errMsg:err}:null,doc);
                 })
@@ -100,6 +139,11 @@ saleSchema.statics.addItem = function (id, newItem, scannedBarcode, cb) {
                     barcode     :   scannedBarcode,
                     qty         :   1
                 });
+                doc.subTotal = 0;
+                doc.items.forEach(function (i) {
+                    console.log(i.price.toFixed(2));
+                    doc.subTotal+= Number.parseFloat(i.price.toFixed(2));
+                })
                 doc.save(function (err) {
                     cb(err?{err:true,errMsg:err}:null,doc);
                 })

@@ -46,7 +46,7 @@
     </div>
 
     <div class="pos-right">
-        <div class="interface-container">
+        <div class="interface-container scanningButtons">
             <div class="interface button-group-numbers">
                 <button class="interface button" val="1" name="numButton">1</button>
                 <button class="interface button" val="2" name="numButton">2</button>
@@ -82,7 +82,47 @@
             <div class="interface button-group-totals">
                 <button class="interface button-wide button-red">MANAGER MODE</button><br>
                 <button class="interface button-wide button-red">LINE VOID</button><br>
-                <button class="interface button-huge button-sub-total">SUB TOTAL</button>
+                <button class="interface button-huge button-sub-total" name="subTotal">SUB TOTAL</button>
+            </div>
+
+        </div>
+        <div class="interface-container subtotal hidden">
+            <div class="interface button-group-numbers">
+                <button class="interface button" val="1" name="numButton">1</button>
+                <button class="interface button" val="2" name="numButton">2</button>
+                <button class="interface button" val="3" name="numButton">3</button>
+
+                <br>
+
+                <button class="interface button" val="4" name="numButton">4</button>
+                <button class="interface button" val="5" name="numButton">5</button>
+                <button class="interface button" val="6" name="numButton">6</button>
+
+                <br>
+
+                <button class="interface button" val="7" name="numButton">7</button>
+                <button class="interface button" val="8" name="numButton">8</button>
+                <button class="interface button" val="9" name="numButton">9</button>
+
+                <br>
+
+                <button class="interface button" val="0" name="numButton">0</button>
+                <button class="interface button-wide" val="." name="numButton">.</button>
+            </div>
+
+            <div class="interface button-group-enter">
+                <button class="interface button-tall" name="enter">ENTER</button>
+            </div>
+
+            <div class="interface number-input-container">
+                <input type="text" class="interface number-input" name="in">
+                <button class="interface button backspace-button" name="backspace"><</button>
+            </div>
+
+            <div class="interface button-group-totals">
+                <!--<button class="interface button-wide button-red">MANAGER MODE</button><br>-->
+                <!--<button class="interface button-wide button-red">LINE VOID</button><br>-->
+                <button class="interface button-huge button-cash">CASH</button>
             </div>
 
         </div>

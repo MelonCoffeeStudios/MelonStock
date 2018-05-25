@@ -51,6 +51,31 @@ $(function(){
         });
     })
 
+    $("[name=subTotal]").click(function () {
+        switchModes();
+    })
+
+    $(".button-cash").click(function () {
+        var cashAdded = $input.val();
+        $.post("/sale/addCash", {cashToAdd: Number.parseFloat(cashAdded)}, function (res) {
+            if(!res.err) {
+                console.log(res);
+                sale = res;
+                updateScanned()
+                if (res) {
+                    $input.val("")
+                } else {
+                    notify("Error!", "Item not found!");
+                    $input.val("");
+                }
+            }else {
+                console.log(res);
+                $input.val("");
+                notify("Error", (JSON.stringify(res.errMsg)));
+            }
+        })
+    })
+
     
 });
 var $input;
@@ -70,6 +95,11 @@ var $total;
 var scanList = [];
 var selectedItem = {};
 var sale = {};
+
+function switchModes() {
+    $(".scanningButtons").toggleClass("hidden")
+    $(".subtotal").toggleClass("hidden")
+}
 
 
 function scan(barcode, cb) {
@@ -115,7 +145,11 @@ function updateScanned() {
                 "</tr>"
 
         });
-        $total.html("&pound;" + total.toFixed(2));
+        if(sale.payment){
+            $total.html("&pound;" + (sale.subTotal - sale.payment.amountPaidCash).toFixed(2));
+        }else {
+            $total.html("&pound;" + sale.subTotal.toFixed(2));
+        }
         $scanned.html(str);
     }
 }

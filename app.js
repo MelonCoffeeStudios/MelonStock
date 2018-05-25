@@ -584,11 +584,19 @@
                 res.send({err:true, errMsg:"Stock not found"})
             }else{
                 Sale.addItem(req.user.currentSale, doc, req.params.barcode, function (err, sale) {
+                    console.log(sale);
                     res.send(err?{err:true, errMsg: err}:sale);
                 })
             }
         })
     });
+
+    app.post("/sale/addCash", isLoggedIn, function (req, res) {
+        Sale.addCash(req.user, req.body.cashToAdd, function (err, sale) {
+            console.log(sale);
+            res.send(sale);
+        })
+    })
 
 
     app.post("/stock/add", isLoggedIn, function (req, res) {
@@ -967,7 +975,7 @@
             var timeNow = Date.now();
             var pageNo = 1000;
 
-            Sale.find({}, function (err, docs) {
+            Sale.find({status:"COMPLETE"}, function (err, docs) {
                 // console.log(docs.length);
                 docs.forEach(function (sale) {
                     sale.items.forEach(function (item) {
@@ -1005,7 +1013,7 @@
         })
         
         app.post("/sim/clearSales", isLoggedIn, function (req, res) {
-            Sale.remove({}, function (err) {
+            Sale.remove({status:"COMPLETE"}, function (err) {
                 res.send((err?{err:true, errMsg:err}:{err:false}));
             })
         })
